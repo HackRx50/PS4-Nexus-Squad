@@ -1,0 +1,55 @@
+{
+  "name": "nexaflow_client",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/nexaflow_client/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/rspack:rspack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "web",
+        "outputPath": "dist/apps/nexaflow_client",
+        "main": "apps/nexaflow_client/src/main.tsx",
+        "tsConfig": "apps/nexaflow_client/tsconfig.app.json",
+        "rspackConfig": "apps/nexaflow_client/rspack.config.js",
+        "assets": [
+          "apps/nexaflow_client/src/favicon.ico",
+          "apps/nexaflow_client/src/assets"
+        ]
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production",
+          "optimization": true,
+          "sourceMap": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/rspack:dev-server",
+      "options": {
+        "buildTarget": "nexaflow_client:build:development"
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "buildTarget": "nexaflow_client:build:production"
+        }
+      }
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "nexaflow_client:build",
+        "spa": true
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+# Virtual environment
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Recursively ignore pycache in all directories
+**/__pycache__/
+
+# Other common Python-related files to ignore
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# IDE-specific files (optional)
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+server/deployments

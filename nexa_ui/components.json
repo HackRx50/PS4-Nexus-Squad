@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "tailwind": {
+    "config": "apps/**/tailwind.config.js",
+    "css": "apps/**/src/styles.css",
+    "baseColor": "zinc",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "style": "default",
+  "rsc": false,
+  "tsx": true,
+  "aliases": {
+    "components": "@nexa_ui/shared/components",
+    "utils": "@nexa_ui/shared/utils",
+    "ui": "@nexa_ui/shared/components/ui",
+    "lib": "@nexa_ui/shared/lib",
+    "hooks": "@nexa_ui/shared/hooks"
+  }
+}

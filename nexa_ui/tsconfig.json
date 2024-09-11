@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@nexa_ui/shared/*": ["shared/src/*"]
+    }
+  }
+}
