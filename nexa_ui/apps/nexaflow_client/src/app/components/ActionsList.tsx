@@ -6,13 +6,13 @@ import { Edit, Trash2 } from "lucide-react";
 
 
 interface Action {
-    code: string;
-    created_at?: string;
-    description: string;
-    id: string;
-    language: string;
-    title: string;
-    updated_at?: string;
+  code: string;
+  created_at?: string;
+  description: string;
+  aid: string;
+  language: string;
+  title: string;
+  updated_at?: string;
 }
 
 interface ActionsListProps{
@@ -34,7 +34,7 @@ const ActionsList: React.FC<ActionsListProps> = ({actions, handleEditAction, han
     <CardContent className="flex-grow overflow-hidden">
       <ScrollArea className="h-full">
         {actions.map((action) => (
-          <Card key={action.id} className="mb-4 relative group">
+          <Card key={action.aid} className="mb-4 relative group">
             <CardHeader className="py-3 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-medium">
                 {action.title}
@@ -43,14 +43,14 @@ const ActionsList: React.FC<ActionsListProps> = ({actions, handleEditAction, han
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleEditAction(action.id)}
+                  onClick={() => handleEditAction(action.aid)}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDeleteAction(action.id)}
+                  onClick={() => handleDeleteAction(action.aid)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

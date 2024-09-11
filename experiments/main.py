@@ -33,7 +33,7 @@ index = pc.Index(index_name)
 
 # geo encoding 
 
-def get_geocoding(city, country):
+def get_geocoding(city):
     """
     Get the latitude and longitude geocoding of a city and country
 

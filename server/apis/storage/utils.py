@@ -8,6 +8,10 @@ def find_agent_by_name(session, name):
     """Function to find an agent by name."""
     return session.query(Agent).filter_by(name=name).first()
 
+def find_agent_by_name(session, id):
+    """Function to find an agent by name."""
+    return session.query(Agent).filter_by(agid=id).first()
+
 def find_agents_by_user(session, user_id):
     """Find all agents owned by a specific user."""
     return session.query(Agent).filter_by(owner=user_id).all()

@@ -1,11 +1,11 @@
 from sqlalchemy import Column, String, DATETIME, ForeignKey, Enum, Table
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 import cuid
 
-Base = declarative_base()
+from .db import get_session, Base
+
 
 class AccessLevel(enum.Enum):
     PUBLIC = "PUBLIC"
@@ -37,6 +37,11 @@ class User(Base):
         return session.query(Agent).filter_by(owner=self.uid).all()
 
     @classmethod
+    def find_by_uid(cls, session, id):
+        """Class method to find a user by email."""
+        return session.query(cls).filter_by(uid=id).first()
+    
+    @classmethod
     def find_by_email(cls, session, email):
         """Class method to find a user by email."""
         return session.query(cls).filter_by(email=email).first()
@@ -45,8 +50,8 @@ class Agent(Base):
     __tablename__ = "agents"
     agid = Column("agid", String, primary_key=True, default=cuid.cuid)
     name = Column("name", String, unique=True)
-    access = Column("access", Enum(AccessLevel), nullable=False, default=AccessLevel.PRIVATE)
-    owner = Column("owner", ForeignKey("users.uid"))
+    access = Column("access", Enum(AccessLevel), nullable=False, default=AccessLevel.PUBLIC)
+    owner = Column("owner", ForeignKey("users.uid"), default="cm0xu8fn70001nlpclah1myy9")
 
     allowed_users = relationship("User", secondary=agent_user_association, backref="allowed_agents")
 
@@ -86,9 +91,8 @@ class Agent(Base):
             self.access = new_access_level
             session.commit()
         elif self.access == AccessLevel.PRIVATE and new_access_level == AccessLevel.PUBLIC:
-            # Handle transition from PRIVATE to PUBLIC
             self.access = new_access_level
-            self.allowed_users = []  # Clear allowed users when switching to PUBLIC
+            self.allowed_users = []
             session.commit()
         else:
             raise ValueError("No change in access level.")
@@ -105,20 +109,29 @@ class Action(Base):
     code = Column("code", String)
     language = Column("language", String)
     agent = Column("agent", ForeignKey("agents.agid"))
-    owner = Column("owner", ForeignKey("users.uid"))
+    owner = Column("owner", ForeignKey("users.uid"), default="cm0xu8fn70001nlpclah1myy9")
     created_at = Column("created_at", DATETIME, default=datetime.utcnow)
     updated_at = Column("updated_at", DATETIME, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __init__(self, aid, title, description, code, language, agent, owner):
-        self.aid = aid
+    def __init__(self, title, description, code, language, agent, owner, aid=None):
         self.title = title
         self.description = description
         self.code = code
         self.language = language
         self.agent = agent
         self.owner = owner
+        if aid:
+            self.aid = aid
 
     def get_summary(self):
         """Instance method to return a summary of the action."""
         return f"{self.title}: {self.description}"
 
+    @classmethod
+    def create(cls, title: str, description: str, code: str, language: str, agent_id: str, owner_id: str=None):
+        session = get_session()
+        action = Action(title, description,code, language, agent_id, owner_id)
+        session.add(action)
+        session.commit()
+        session.close()
+        return action

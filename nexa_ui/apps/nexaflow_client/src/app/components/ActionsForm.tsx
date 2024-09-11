@@ -25,7 +25,7 @@ interface Action {
   code: string;
   created_at?: string;
   description: string;
-  id: string;
+  aid: string;
   language: string;
   title: string;
   updated_at?: string;
@@ -38,14 +38,14 @@ interface ActionFormProps {
   requirements: string;
   invalidPackages: string[];
   actions: Action[];
-  editingAction: Action | undefined;
+  editingAction: Action | null;
 
   setCode: (code: string) => void;
   setLanguage: (language: string) => void;
   setActionTitle: (title: string) => void;
   setRequirements: (requirements: string) => void;
   setActions: (actions: Action[]) => void;
-  setEditingAction: (editingAction: Action) => void;
+  setEditingAction: (editingAction: Action | null) => void;
 }
 
 // Add this near the top of your file, outside of any component
@@ -99,7 +99,7 @@ function ActionsForm({
       setCode(editingAction.code)
       setLanguage(editingAction.language)
       setActionTitle(editingAction.title)
-      setEditingIndex(editingAction.id)  
+      setEditingIndex(editingAction.aid)  
     }
   },[editingAction])
 
@@ -137,7 +137,7 @@ function ActionsForm({
     if (!editingAction) return;
   
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/actions/${editingAction.id}`, {
+      const response = await fetch(`http://localhost:8000/api/v1/actions/${editingAction.aid}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -155,7 +155,7 @@ function ActionsForm({
       if (response.ok) {
         // Update the local actions list with the updated action
         const updatedActions = actions.map((action) =>
-          action.id === editingAction.id
+          action.aid === editingAction.aid
             ? { ...action, code, language, title: actionTitle, requirements }
             : action
         );

@@ -4,11 +4,10 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from os.path import join
 
-
 load_dotenv()
 
 from settings import CORS_ALLOWED_ORIGINS, BASE_DIR
-from apps.apis import router as APIRouter
+from apis import router
 from middlewares import DomainStaticFilesMiddleware
 
 app = FastAPI()
@@ -25,8 +24,8 @@ app.add_middleware(
 
 hosting_path = join("deployments", "www.nexaflow.co")
 
-app.include_router(APIRouter)
+app.include_router(router)
 
 if __name__=="__main__":
     from uvicorn import run
-    run("main:app", host="0.0.0.0", port=80, reload=True)
+    run("main:app", host="0.0.0.0", port=443, reload=True, ssl_certfile="./certs/certificate.pem", ssl_keyfile="./certs/private-key.pem")

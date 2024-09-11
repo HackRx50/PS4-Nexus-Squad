@@ -1,8 +1,11 @@
 import os
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5500",
-    "http://127.0.0.1:5500"
+    "*",
 ]
 
 BASE_DIR = os.getcwd()
+
+AGENT_NOT_ALLOWED_NAME = [
+    'backend', 'dashboard', 'user', '-invalid', 'console', 'register', 'sysadmin', '123', 'test_', 'system', 'superuser', 'api', 'root', 'login', 'admin-panel', 'auth', 'root-', 'admin', 'user-portal', 'client', 'support', 'help', 'dev', 'avnica'
+]

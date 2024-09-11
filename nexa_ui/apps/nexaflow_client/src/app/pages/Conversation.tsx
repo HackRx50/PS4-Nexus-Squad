@@ -28,7 +28,7 @@ function ChatPanel() {
   };
 
   async function bootAgent(agent_id: string) {
-    const response = await fetch(`http://localhost:8000/api/v1/nexbot/boot_agent/${agent_id}`);
+    const response = await fetch(`/api/v1/nexbot/boot_agent/${agent_id}`);
     const data = await response.json();
     console.log(data);
   }
@@ -68,7 +68,7 @@ function ChatPanel() {
 
       try {
         const userMessage = { query: inputText };
-        const response = await fetch(`http://localhost:8000/api/v1/nexbot/conversation/${agent_id}`, {
+        const response = await fetch(`/api/v1/nexbot/conversation/${agent_id}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

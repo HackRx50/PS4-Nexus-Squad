@@ -8,7 +8,7 @@ interface Action {
   code: string;
   created_at?: string;
   description: string;
-  id: string;
+  aid: string;
   language: string;
   title: string;
   updated_at?: string;
@@ -22,7 +22,7 @@ const SimpleCodeEditor: React.FC = () => {
   const [requirements, setRequirements] = useState("requests");
   const [invalidPackages, setInvalidPackages] = useState<string[]>([]);
 
-  const [editingAction, setEditingAction] = useState<Action | undefined>();
+  const [editingAction, setEditingAction] = useState<Action | null>(null);
   const [actions, setActions] = useState<Action[]>([]); // Update the state type
   const [editingActionID, setEditingActionID] = useState<string | null>(
     null
@@ -35,7 +35,7 @@ const SimpleCodeEditor: React.FC = () => {
   },[actions])
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/actions")
+    fetch("/api/v1/actions")
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
@@ -52,14 +52,14 @@ const SimpleCodeEditor: React.FC = () => {
 
   const handleEditAction = (index: string) => {
     // setEditingActionID(index)
-    setEditingAction(actions.filter((input)=> input.id == index)[0]);
+    setEditingAction(actions.filter((input)=> input.aid === index)[0]);
   };
 
 
   const handleDeleteAction = async (id: string) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/actions/${id}`,
+        `/api/v1/actions/${id}`,
         {
           method: "DELETE",
         }
@@ -67,7 +67,7 @@ const SimpleCodeEditor: React.FC = () => {
       const data = await response.json();
       console.log(data);
       if (response.ok) {
-        const newActions = actions.filter((action) => action.id !== id);
+        const newActions = actions.filter((action) => action.aid !== id);
         setActions(newActions);
 
         toast({

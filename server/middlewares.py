@@ -1,9 +1,11 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from os.path import join
 from mimetypes import guess_type
+from os.path import join
 import os
 
+from apis.storage.db import get_session
+from apis.storage.utils import find_agent_by_name
 from settings import BASE_DIR
 
 def getSubdomain(url: str):
@@ -12,7 +14,6 @@ def getSubdomain(url: str):
         return ".".join(domain_parts[:-2])
     else:
         return "www"
-
 
 def getSPAContent(subdomain: str, path: str):
     spa_path = join(BASE_DIR, "deployments", subdomain) 
@@ -31,7 +32,23 @@ def getSPAContent(subdomain: str, path: str):
             content = file.read()
     return content
 
+
 class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
+
+    agents_cache = []
+
+    def isAgentExists(self, name: str):
+        if name not in self.agents_cache:
+            session = get_session()
+            agent = find_agent_by_name(session, name)
+            session.close()
+            if agent:
+                self.agents_cache.append(agent.name)
+                return True
+            else:
+                return False
+        return True
+
     async def dispatch(self, request: Request, call_next):
 
         host = request.headers.get("host", "")
@@ -40,17 +57,26 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
         print(f"Host: {host}, Path: {path}")
         
         subdomain = getSubdomain(host)
-
-        print(subdomain)
+        request.state.subdomain = subdomain
         
-        if subdomain in ['admin', 'www', '']:
+        if subdomain == 'admin':
             content = getSPAContent(subdomain, path)
             mime_type, _ = guess_type(path)
             if not mime_type:
                 mime_type = "text/html"
             return Response(content, media_type=mime_type)
         
-        if subdomain == 'api':
+        if (subdomain == '' or subdomain == 'www' or self.isAgentExists(subdomain)) and not path.startswith("/api") and not path.startswith("/docs") and not path.startswith("/openapi.json"):
+            content = getSPAContent('www', path)
+            mime_type, _ = guess_type(path)
+            if not mime_type:
+                mime_type = "text/html"
+            return Response(content, media_type=mime_type)
+        elif path.startswith('/api') or path.startswith("/docs") or path.startswith("/openapi.json"):
+            print("Path Maintainer")
             return await call_next(request)
+        else:
+            with open("404.html", "br") as file:
+                return Response(file.read(), media_type="text/html")
 
-        return await call_next(request)
+
