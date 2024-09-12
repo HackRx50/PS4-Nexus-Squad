@@ -45,6 +45,7 @@ async def upload_document(request: Request, file: UploadFile = File()):
 @document_router.delete("/{document_id}")
 async def deleteDocument(document_id: str):
     result = KnowledgeDocument.delete_by_id(session=session, document_id=document_id)
-
     if result:
         return Response(status_code=204, content=f"Document with id: {document_id} deleted")
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document doesn't exists")

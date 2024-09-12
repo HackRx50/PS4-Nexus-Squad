@@ -156,6 +156,25 @@ class Action(Base):
             self.aid = aid
 
     @classmethod
+    def get_actions_by_agent_name(cls, session: Session, agent_name: str):
+        return (
+            session.query(Action)
+            .join(Agent, Action.agent == Agent.agid)
+            .filter(Agent.name == agent_name)
+            .all()
+        )
+
+    @classmethod
+    def delete_by_id(cls, session: Session, action_id: str):
+        action = session.query(Action).filter_by(aid=action_id).first()
+        if action:
+            session.delete(action)
+            session.commit()
+            return True
+        else:
+            return False
+
+    @classmethod
     def create(
         cls,
         title: str,
