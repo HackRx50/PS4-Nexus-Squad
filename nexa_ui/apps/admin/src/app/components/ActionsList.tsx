@@ -68,7 +68,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
           >
             <Terminal className="w-4 mr-2"  />
             Action
-          </Button>
+          </Button> 
           <Button 
             variant={selectedToggle === 'documents' ? 'secondary' : 'outline'}
             onClick={() => handleToggle('documents')}
