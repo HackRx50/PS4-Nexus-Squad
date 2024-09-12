@@ -5,6 +5,7 @@ class PostActionSchema(BaseModel):
     code: str
     language: str
     agent_id: str
+    requirements: str
 
 class UpdateActionSchema(BaseModel):
     title: str

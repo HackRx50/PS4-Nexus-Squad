@@ -6,7 +6,6 @@ import cuid
 
 from .db import get_session, Base
 
-
 class AccessLevel(enum.Enum):
     PUBLIC = "PUBLIC"
     PRIVATE = "PRIVATE"
@@ -55,9 +54,10 @@ class Agent(Base):
 
     allowed_users = relationship("User", secondary=agent_user_association, backref="allowed_agents")
 
-    def __init__(self, name: str, owner, access: AccessLevel = AccessLevel.PRIVATE):
+    def __init__(self, name: str, owner=None, access: AccessLevel = AccessLevel.PRIVATE):
         self.name = name
-        self.owner = owner
+        if not owner:
+            self.owner = owner
         self.access = access
         self.allowed_users
 
@@ -108,6 +108,7 @@ class Action(Base):
     description = Column("description", String)
     code = Column("code", String)
     language = Column("language", String)
+    requirements = Column("requirements", String)
     agent = Column("agent", ForeignKey("agents.agid"))
     owner = Column("owner", ForeignKey("users.uid"), default="cm0xu8fn70001nlpclah1myy9")
     created_at = Column("created_at", DATETIME, default=datetime.utcnow)
@@ -135,3 +136,6 @@ class Action(Base):
         session.commit()
         session.close()
         return action
+
+# class Session(Base):
+#     __tablename__ = "sessions"
