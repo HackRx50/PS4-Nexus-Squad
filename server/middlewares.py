@@ -10,6 +10,8 @@ from settings import BASE_DIR
 
 def getSubdomain(url: str):
     domain_parts = url.split(".")
+    if len(domain_parts) == 2 and domain_parts[1].startswith("localhost"):
+        return domain_parts[0]
     if len(domain_parts) > 2:
         return ".".join(domain_parts[:-2])
     else:
@@ -58,6 +60,7 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
         
         subdomain = getSubdomain(host)
         request.state.subdomain = subdomain
+        print(subdomain)
         
         if subdomain == 'admin':
             content = getSPAContent(subdomain, path)
@@ -73,7 +76,6 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
                 mime_type = "text/html"
             return Response(content, media_type=mime_type)
         elif path.startswith('/api') or path.startswith("/docs") or path.startswith("/openapi.json"):
-            print("Path Maintainer")
             return await call_next(request)
         else:
             with open("404.html", "br") as file:
