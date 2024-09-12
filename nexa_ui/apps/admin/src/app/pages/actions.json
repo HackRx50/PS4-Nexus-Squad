@@ -1,0 +1,112 @@
+{
+    "actions": [
+        {
+            "aid": "098f2bd4-5a3c-427a-a821-a076f0c720df",
+            "title": "cm0pkpft400039bsbey5fkr6s_hello_django",
+            "description": "\n    Return a greeting for Django framework.\n\n    Returns:\n        str: A string greeting Django.\n    ",
+            "code": "def hello_django():\n    \"\"\"\n    Return a greeting for Django framework.\n\n    Returns:\n        str: A string greeting Django.\n    \"\"\"\n    return \"Hello Django\"\n",
+            "language": "python",
+            "created_at": "2024-09-05T17:40:43.722Z",
+            "updated_at": "2024-09-05T17:40:43.722Z"
+        },
+        {
+            "aid": "ea1c651b-2313-4aa2-a269-ae58fcc658f9",
+            "title": "cm0pkpft400039bsbey5fkr6s_hello_flask",
+            "description": "\n    Return a greeting for Flask framework.\n\n    Returns:\n        str: A string greeting Flask.\n    ",
+            "code": "def hello_flask():\n    \"\"\"\n    Return a greeting for Flask framework.\n\n    Returns:\n        str: A string greeting Flask.\n    \"\"\"\n    return \"Hello Flask\"\n",
+            "language": "python",
+            "created_at": "2024-09-05T17:40:43.724Z",
+            "updated_at": "2024-09-05T17:40:43.724Z"
+        },
+        {
+            "aid": "8417f7e7-eb17-45a0-8cd4-c6aabaceb0d3",
+            "title": "cm0pkpft400039bsbey5fkr6s_hello_python",
+            "description": "\n    Return a greeting for Python.\n\n    Returns:\n        str: A string greeting Python.\n    ",
+            "code": "def hello_python():\n    \"\"\"\n    Return a greeting for Python.\n\n    Returns:\n        str: A string greeting Python.\n    \"\"\"\n    return \"Hello Python\"\n",
+            "language": "python",
+            "created_at": "2024-09-05T17:40:43.725Z",
+            "updated_at": "2024-09-05T17:40:43.725Z"
+        },
+        {
+            "aid": "cce8dabd-2de9-4e92-b598-b6bdb083c94f",
+            "title": "cm0pkpft400039bsbey5fkr6s_hello_react",
+            "description": "\n    Return a greeting for React library.\n\n    Returns:\n        str: A string greeting React.\n    ",
+            "code": "def hello_react():\n    \"\"\"\n    Return a greeting for React library.\n\n    Returns:\n        str: A string greeting React.\n    \"\"\"\n    return \"Hello React\"\n",
+            "language": "python",
+            "created_at": "2024-09-05T17:40:43.726Z",
+            "updated_at": "2024-09-05T17:40:43.726Z"
+        },
+        {
+            "aid": "4a02e26c-9707-42d8-bdf3-f842467d7f5b",
+            "title": "cm0pkpft400039bsbey5fkr6s_hello_universe",
+            "description": "\n    Return a greeting for the universe.\n\n    Returns:\n        str: A string greeting the universe.\n    ",
+            "code": "def hello_universe():\n    \"\"\"\n    Return a greeting for the universe.\n\n    Returns:\n        str: A string greeting the universe.\n    \"\"\"\n    return \"Hello Universe\"\n",
+            "language": "python",
+            "created_at": "2024-09-05T17:40:43.727Z",
+            "updated_at": "2024-09-05T17:40:43.727Z"
+        },
+        {
+            "aid": "0736bcd4-093a-4ec5-be8d-638796062c54",
+            "title": "cm0pkpft400039bsbey5fkr6s_hello_world",
+            "description": "\n    Return a classic \"Hello World\" greeting.\n\n    Returns:\n        str: The string \"Hello World\".\n    ",
+            "code": "def hello_world():\n    \"\"\"\n    Return a classic \"Hello World\" greeting.\n\n    Returns:\n        str: The string \"Hello World\".\n    \"\"\"\n    return \"Hello World\"\n",
+            "language": "python",
+            "created_at": "2024-09-05T17:40:43.728Z",
+            "updated_at": "2024-09-05T17:40:43.728Z"
+        },
+        {
+            "aid": "c07a9b65-9dbe-409a-9e99-c8ace775f7a8",
+            "title": "cm0qeynbw00032ysb32wkfkns_addition",
+            "description": "\n    Add two integers.\n\n    Args:\n        a: The first integer.\n        b: The second integer.\n\n    Returns:\n        The sum of a and b.\n    ",
+            "code": "def addition(a: int, b: int) -> int:\n    \"\"\"\n    Add two integers.\n\n    Args:\n        a: The first integer.\n        b: The second integer.\n\n    Returns:\n        The sum of a and b.\n    \"\"\"\n    return a + b\n",
+            "language": "python",
+            "created_at": "2024-09-06T07:47:41.855Z",
+            "updated_at": "2024-09-06T07:47:41.855Z"
+        },
+        {
+            "aid": "3b990c84-7b1e-4c6f-ac49-e9ba35d337a7",
+            "title": "cm0qeynbw00032ysb32wkfkns_division",
+            "description": "\n    Divide two integers.\n\n    Args:\n        a: The dividend.\n        b: The divisor.\n\n    Returns:\n        The result of a divided by b.\n        \n    Raises:\n        ValueError: If b is zero.\n    ",
+            "code": "def division(a: int, b: int) -> float:\n    \"\"\"\n    Divide two integers.\n\n    Args:\n        a: The dividend.\n        b: The divisor.\n\n    Returns:\n        The result of a divided by b.\n        \n    Raises:\n        ValueError: If b is zero.\n    \"\"\"\n    if b == 0:\n        raise ValueError(\"Cannot divide by zero\")\n    return a / b\n",
+            "language": "python",
+            "created_at": "2024-09-06T07:47:41.857Z",
+            "updated_at": "2024-09-06T07:47:41.857Z"
+        },
+        {
+            "aid": "d1ddc2a5-bbcf-4874-9336-9309a046459d",
+            "title": "cm0qeynbw00032ysb32wkfkns_multiplication",
+            "description": "\n    Multiply two integers.\n\n    Args:\n        a: The first integer.\n        b: The second integer.\n\n    Returns:\n        The product of a and b.\n    ",
+            "code": "def multiplication(a: int, b: int) -> int:\n    \"\"\"\n    Multiply two integers.\n\n    Args:\n        a: The first integer.\n        b: The second integer.\n\n    Returns:\n        The product of a and b.\n    \"\"\"\n    return a * b\n",
+            "language": "python",
+            "created_at": "2024-09-06T07:47:41.858Z",
+            "updated_at": "2024-09-06T07:47:41.858Z"
+        },
+        {
+            "aid": "6df036d0-35eb-4217-9956-52ad1756f1ba",
+            "title": "cm0qeynbw00032ysb32wkfkns_power",
+            "description": "\n    Raise base to the power of exponent.\n\n    Args:\n        base: The base integer.\n        exponent: The exponent to raise the base to.\n\n    Returns:\n        The result of base raised to exponent.\n    ",
+            "code": "def power(base: int, exponent: int) -> int:\n    \"\"\"\n    Raise base to the power of exponent.\n\n    Args:\n        base: The base integer.\n        exponent: The exponent to raise the base to.\n\n    Returns:\n        The result of base raised to exponent.\n    \"\"\"\n    return base ** exponent\n",
+            "language": "python",
+            "created_at": "2024-09-06T07:47:41.859Z",
+            "updated_at": "2024-09-06T07:47:41.859Z"
+        },
+        {
+            "aid": "4a3a6473-06f8-474f-b055-9a2885381140",
+            "title": "cm0qeynbw00032ysb32wkfkns_subtraction",
+            "description": "\n    Subtract one integer from another.\n\n    Args:\n        a: The first integer.\n        b: The second integer.\n\n    Returns:\n        The difference between a and b.\n    ",
+            "code": "def subtraction(a: int, b: int) -> int:\n    \"\"\"\n    Subtract one integer from another.\n\n    Args:\n        a: The first integer.\n        b: The second integer.\n\n    Returns:\n        The difference between a and b.\n    \"\"\"\n    return a - b\n",
+            "language": "python",
+            "created_at": "2024-09-06T07:47:41.859Z",
+            "updated_at": "2024-09-06T07:47:41.859Z"
+        },
+        {
+            "aid": "1fabdf70-c922-4568-b40a-b5b70ac707d0",
+            "title": "cm0qgv2vj00072ysbeksc68ft_get_user_list",
+            "description": "Give the list user of user\r\n    \r\n    Args:\r\n        count: How many user should return default to 10\r\n        \r\n    \r\n    Returns:\r\n        A list of user",
+            "code": "def get_user_list(count: int = 10):\r\n    \"\"\"\r\n    Give the list user of user\r\n    \r\n    Args:\r\n        count: How many user should return default to 10\r\n        \r\n    \r\n    Returns:\r\n        A list of user\r\n    \"\"\"\r\n    user_list = []\r\n    \r\n    for i in range(count):\r\n        user_list.append({\r\n            \"id\": i,\r\n            \"name\": f\"abhishek {i}\",\r\n            \"email\": f\"abhishek{i}@mail.com\"\r\n        })\r\n    \r\n    return user_list",
+            "language": "python",
+            "created_at": "2024-09-06T08:40:54.611Z",
+            "updated_at": "2024-09-06T08:56:14.813Z"
+        }
+    ]
+}
