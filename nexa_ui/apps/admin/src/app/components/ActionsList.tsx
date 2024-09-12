@@ -8,7 +8,7 @@ import {
 } from '@nexa_ui/shared';
 import { Button } from '@nexa_ui/shared';
 import { ScrollArea } from '@nexa_ui/shared';
-import { Edit, Trash2, Upload } from 'lucide-react';
+import { Edit, Trash2, Upload, Terminal } from 'lucide-react';
 
 interface Action {
   code: string;
@@ -20,11 +20,21 @@ interface Action {
   updated_at?: string;
 }
 
+interface Document {
+  doc_id: string;
+  title: string;
+  description: string;
+  file_type: string;
+  size: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 type ToggleOption = 'action' | 'documents';
 
 interface ActionsListProps {
   actions: Action[];
-  documentsData: Action[];
+  documentsData: Document[];
   selectedToggle: string;
   // selectedActionIndex: number;
   handleEditAction: (actionID: string) => void;
@@ -56,6 +66,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
             onClick={() => handleToggle('action')}
             className="w-[50%]"
           >
+            <Terminal className="w-4 mr-2"  />
             Action
           </Button>
           <Button
@@ -63,12 +74,13 @@ const ActionsList: React.FC<ActionsListProps> = ({
             onClick={() => handleToggle('documents')}
             className="w-[50%]"
           >
+            <Upload className="w-4 mr-2" />
             Documents
           </Button>
         </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        <ScrollArea className="h-[70vh]">
+        <ScrollArea className="h-full">
 
           {selectedToggle === "action" ? actions.map((action) => (
             <Card key={action.aid} className="mb-4 relative group">
@@ -80,12 +92,14 @@ const ActionsList: React.FC<ActionsListProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
+                    className='hidden'
                     onClick={() => handleEditAction(action.aid)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="destructive"
+                    className="scale-[.85]"
                     size="icon"
                     onClick={() => handleDeleteAction(action.aid)}
                   >
@@ -101,7 +115,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
               </CardContent>
             </Card>
           )) : documentsData.map((document) => (
-            <Card key={document.aid} className="mb-4 relative group">
+            <Card key={document.doc_id} className="mb-4 relative group">
               <CardHeader className="py-3 flex flex-row items-center justify-between">
                 <CardTitle className="text-sm font-medium">
                   {document.title}
@@ -111,14 +125,15 @@ const ActionsList: React.FC<ActionsListProps> = ({
                     variant="ghost"
                     className='hidden'
                     size="icon"
-                    onClick={() => handleEditAction(document.aid)}
+                    onClick={() => handleEditAction(document.doc_id)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="destructive"
                     size="icon"
-                    onClick={() => handleDeleteAction(document.aid)}
+                    className="scale-[.85]"
+                    onClick={() => handleDeleteAction(document.doc_id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -126,8 +141,8 @@ const ActionsList: React.FC<ActionsListProps> = ({
               </CardHeader>
               <CardContent className="py-2">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{document.language}</span>
-                  <span>{document.created_at}</span>
+                  <span className="w-1/2">{document.description}</span>
+                  <span className="mt-auto">{document.created_at}</span>
                 </div>
               </CardContent>
             </Card>

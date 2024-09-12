@@ -4,6 +4,7 @@ import { Toaster } from "@nexa_ui/shared";
 import ActionsForm from "../components/ActionsForm";
 import ActionsList from "../components/ActionsList";
 import actionsDummyData from "./actions.json";
+import documentsDummyData from "./documents.json";
 
 interface Action {
   code: string;
@@ -12,6 +13,16 @@ interface Action {
   aid: string;
   language: string;
   title: string;
+  updated_at?: string;
+}
+
+interface Document {
+  doc_id: string;
+  title: string;
+  description: string;
+  file_type: string;
+  size: string;
+  created_at?: string;
   updated_at?: string;
 }
 
@@ -28,6 +39,7 @@ const SimpleCodeEditor: React.FC = () => {
 
   const [editingAction, setEditingAction] = useState<Action | null>(null);
   const [actions, setActions] = useState<Action[]>([]); // Update the state type
+  const [documents, setDocuments] = useState<Document[]>([]); // Update the state type
   const [editingActionID, setEditingActionID] = useState<string | null>(
     null
   );
@@ -36,6 +48,7 @@ const SimpleCodeEditor: React.FC = () => {
 
   useEffect(()=>{
     setActions(actionsDummyData.actions)
+    setDocuments(documentsDummyData.documents)
   },[])
 
   useEffect(() => {
@@ -106,7 +119,7 @@ const SimpleCodeEditor: React.FC = () => {
           handleDeleteAction={handleDeleteAction}
           handleToggle={handleToggle}
           selectedToggle={selectedToggle} 
-          documentsData={actions} // update this
+          documentsData={documents}
         />
 
         <ActionsForm

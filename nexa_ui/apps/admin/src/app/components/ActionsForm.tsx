@@ -224,13 +224,12 @@ function ActionsForm({
     console.log('File selected:', file?.name);
   };
 
-
   return (
     <>
       <Card className={`w-2/3 flex flex-col`}>
         <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
           <CardTitle>
-            {selectedToggle === 'action' ? 'Crete Actions' : 'Upload Douments'}
+            {selectedToggle === 'action' ? 'Create Actions' : 'Upload Douments'}
           </CardTitle>
           <div className="flex space-x-2">
             <Button variant="outline" size="icon" onClick={copyToClipboard}>
@@ -270,7 +269,7 @@ function ActionsForm({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="python">Python</SelectItem>
-                    <SelectItem value="javascript">JavaScript</SelectItem>
+                    {/* <SelectItem value="javascript">JavaScript</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>
@@ -330,16 +329,14 @@ function ActionsForm({
             <Button
               variant="outline"
               onClick={() => document.getElementById('file-upload')?.click()}
-              className="w-full h-full"
+              className="w-full h-[75vh]"
             >
               <Upload className="w-4 mr-2" />
               Upload File
             </Button>
-            {selectedFile && (
               <p className="mt-2 text-sm text-muted-foreground">
-                Selected: {selectedFile.name}
+                Selected: {selectedFile ? selectedFile.name : 'None'}
               </p>
-            )}
           </div>
         )}
       </Card>
