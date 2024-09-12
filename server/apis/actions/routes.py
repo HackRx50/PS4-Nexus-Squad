@@ -36,5 +36,4 @@ def updateAction(agent_id: str, action_data: UpdateActionSchema):
     module_name = create_action_file(action_data.code)
     agent = find_agent_by_id(session, action_data.agent_id)
     print("AgentID:", agent.agid)
-    actions
 
