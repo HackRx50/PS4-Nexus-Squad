@@ -12,7 +12,6 @@ def is_valid_subdomain(name):
         return True
     return False
 
-
 def is_used_by_other(name: str):
     session = get_session()
     q = session.query(Agent).filter(Agent.name == name).all()
@@ -20,3 +19,4 @@ def is_used_by_other(name: str):
 
 def canUseName(name: str):
     return is_valid_subdomain(name) and not is_used_by_other(name)
+
