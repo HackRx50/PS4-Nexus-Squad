@@ -1,0 +1,58 @@
+{
+    "documents": [
+        {
+            "doc_id": "bdc75a34-6d7a-44a2-8a91-12a6c7ff6e27",
+            "title": "Project_Report_2024.pdf",
+            "description": "Final project report for 2024 development cycle.",
+            "file_type": "pdf",
+            "size": "2.4MB",
+            "created_at": "2024-09-06T17:40:43.722Z",
+            "updated_at": "2024-09-06T17:40:43.722Z"
+        },
+        {
+            "doc_id": "fa67c62d-1bb2-4f9b-b2ec-8876f8e86b28",
+            "title": "API_Specifications.docx",
+            "description": "Document outlining API specifications for the new system.",
+            "file_type": "docx",
+            "size": "1.5MB",
+            "created_at": "2024-09-07T12:15:22.524Z",
+            "updated_at": "2024-09-07T12:15:22.524Z"
+        },
+        {
+            "doc_id": "23c56429-441a-4214-81b9-ea6b6a5f2dfd",
+            "title": "Database_Schema.png",
+            "description": "Image of the database schema used in the project.",
+            "file_type": "png",
+            "size": "500KB",
+            "created_at": "2024-09-07T14:33:11.123Z",
+            "updated_at": "2024-09-07T14:33:11.123Z"
+        },
+        {
+            "doc_id": "dc5b8f8b-c06b-4fd3-a209-3b62b320e5c7",
+            "title": "Meeting_Notes.txt",
+            "description": "Text file with notes from the last project meeting.",
+            "file_type": "txt",
+            "size": "25KB",
+            "created_at": "2024-09-08T09:10:02.837Z",
+            "updated_at": "2024-09-08T09:10:02.837Z"
+        },
+        {
+            "doc_id": "aaf4fcb4-3d3e-4709-b597-7f7482c9dbe1",
+            "title": "User_Guide_2024.pdf",
+            "description": "User guide for the 2024 system update.",
+            "file_type": "pdf",
+            "size": "3.1MB",
+            "created_at": "2024-09-09T11:22:18.214Z",
+            "updated_at": "2024-09-09T11:22:18.214Z"
+        },
+        {
+            "doc_id": "6e5c34b2-942f-41b4-b96f-37d21879e473",
+            "title": "System_Architecture.pptx",
+            "description": "Presentation on the system architecture.",
+            "file_type": "pptx",
+            "size": "4.2MB",
+            "created_at": "2024-09-09T14:08:44.951Z",
+            "updated_at": "2024-09-09T14:08:44.951Z"
+        }
+    ]
+}
