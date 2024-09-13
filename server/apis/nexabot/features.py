@@ -10,6 +10,8 @@ from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
 
 from sqlalchemy.orm.session import Session
 
+from settings import MISTRAL_MODEL_TYPE
+
 from apis.storage.db import get_session
 from apis.storage.models import ChatSession, Action, Agent
 from apis.storage.utils import find_agent_by_id, find_agent_by_name
@@ -55,7 +57,7 @@ class NexaBot:
             vector_search_tool = get_vector_tool(self.agent_name)
             self.tools.append(vector_search_tool)
             print("\n\nBooting LLM...")
-            llm = ChatMistralAI(model_name="mistral-large-latest")
+            llm = ChatMistralAI(model_name=MISTRAL_MODEL_TYPE)
             self.chatBot = create_react_agent(llm, self.tools)
             print("LLM booting Successfull")
             db_session.commit()

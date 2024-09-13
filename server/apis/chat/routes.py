@@ -19,6 +19,7 @@ def talk_session(session_id: str, data:PostTalkChatSchema, request: Request):
     agent_name = request.state.subdomain
     session, nexabot = session_manager.handle_session(session_id, agent_name)
     ai_message, result = session_manager.talk(session, nexabot, data.query)
+    print(ai_message)
     return result
 
 
