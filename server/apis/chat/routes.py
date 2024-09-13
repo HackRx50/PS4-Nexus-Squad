@@ -7,8 +7,6 @@ from .schemas import PostTalkChatSchema
 
 chat_router = APIRouter(prefix="/chat")
 
-
-
 @chat_router.get("/{session_id}")
 def getChatSession(session_id: str, request: Request):
     agent_name = request.state.subdomain
@@ -24,7 +22,6 @@ def talk_session(session_id: str, data:PostTalkChatSchema, request: Request):
     print(ai_message)
     session_manager.save_session(session.cid)
     return result
-
 
 def on_exit():
     print("App is closing...")

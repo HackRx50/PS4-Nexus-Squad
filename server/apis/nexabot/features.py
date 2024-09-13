@@ -36,6 +36,7 @@ class NexaBot:
     tools = []
     agent_name: str
     chatBot: CompiledGraph = None
+    llm = None
 
 
     def boot(self, db_session: Session)->bool:
@@ -58,7 +59,7 @@ class NexaBot:
             self.tools.append(vector_search_tool)
             print("\n\nBooting LLM...")
             llm = ChatMistralAI(model_name=MISTRAL_MODEL_TYPE)
-            self.chatBot = create_react_agent(llm, self.tools)
+            self.chatBot = create_react_agent(self.llm, self.tools)
             print("LLM booting Successfull")
             db_session.commit()
             return True
@@ -69,7 +70,7 @@ class NexaBot:
         return self.chatBot.invoke({ "messages": messages })
 
     @classmethod
-    def create(self, session: Session, agent_id: str):
+    def create(self, session: Session, agent_id: str, llm = None):
         agent = find_agent_by_id(session, agent_id)
         if not agent:
             return None
@@ -77,6 +78,8 @@ class NexaBot:
             nexabot = NexaBot()
             nexabot.agent_name = agent.name
             nexabot.id = agent.agid
+            if llm:
+                nexabot.llm = llm
             nexabot.boot(session)
             return nexabot
 
@@ -88,6 +91,9 @@ class SessionManager:
     sessions_messages = {}
 
     db_session = get_session()
+
+    def __init__(self, llm=None) -> None:
+        self.llm = llm
 
     def get_chat_session(self, session_id: str, agent_name: str):
         for session in self.chat_sessions:
@@ -116,13 +122,11 @@ class SessionManager:
             if bot.id == id:
                 return bot
         
-
-            
     def get_nexabot(self, session: ChatSession):
         for bot in self.active_bots:
             if bot.id == session.agent:
                 return bot
-        nexabot = NexaBot.create(self.db_session, session.agent)
+        nexabot = NexaBot.create(self.db_session, session.agent, self.llm)
         if nexabot:
             self.active_bots.append(nexabot)
         return nexabot
