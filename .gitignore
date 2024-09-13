@@ -33,3 +33,4 @@ server/deployments
 venv
 
 server/temp/*.env
+.env
