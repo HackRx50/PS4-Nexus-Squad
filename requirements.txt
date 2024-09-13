@@ -14,3 +14,4 @@ jq==1.8.0
 unstructured==0.15.10
 unstructured-client==0.25.8
 azure-ai-documentintelligence==1.0.0b4
+langchain-anthropic==0.1.23
