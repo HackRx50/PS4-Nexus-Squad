@@ -29,7 +29,10 @@ def createAction(action_data: PostActionSchema, request: Request):
     agent = find_agent_by_name(session, subdomain)
     print("AgentID:", agent.agid)
     actions = store_actions(module_name, action_data.title, action_data.language, agent.agid)
-
+    
+    if session_manager.has_nexabot(agent.agid):
+        session_manager.get_nexabot_by_id(agent.agid).boot()
+        
     return {
         "messages": "Total actions created {}".format(len(actions)),
         "count": len(actions)
