@@ -7,10 +7,10 @@ engine = create_engine("sqlite:///db.sqlite")
 Base.metadata.create_all(bind=engine)
 
 def get_session():
-
     Base.metadata.create_all(bind=engine)
 
     Session = sessionmaker(bind=engine)
+
     session = Session()
     return session
 
