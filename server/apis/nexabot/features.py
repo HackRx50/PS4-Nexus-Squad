@@ -105,7 +105,19 @@ class SessionManager:
             self.chat_sessions.append(session)
             return session
 
+    def has_nexabot(self, id: str):
+        for bot in self.active_bots:
+            if bot.id == id:
+                return True
+        return False
+    
+    def get_nexabot_by_id(self, id: str):
+        for bot in self.active_bots:
+            if bot.id == id:
+                return bot
+        
 
+            
     def get_nexabot(self, session: ChatSession):
         for bot in self.active_bots:
             if bot.id == session.agent:
