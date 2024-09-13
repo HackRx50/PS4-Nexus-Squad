@@ -12,3 +12,5 @@ AGENT_NOT_ALLOWED_NAME = [
 
 
 PINECONE_INDEX_NAME="nexaflow-test-index"
+
+MISTRAL_MODEL_TYPE="mistral-small-2402"
