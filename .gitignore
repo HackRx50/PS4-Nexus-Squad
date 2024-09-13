@@ -32,4 +32,4 @@ server/deployments
 
 venv
 
-server/temp/*
+server/temp/*.env
