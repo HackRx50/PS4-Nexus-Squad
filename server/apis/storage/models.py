@@ -266,5 +266,41 @@ class KnowledgeDocument(Base):
             session.close()
 
 
-# class Session(Base):
-#     __tablename__ = "sessions"
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+    cid = Column("sid", String, primary_key=True, default=cuid.cuid)
+    agent = Column("agent", ForeignKey("agents.agid"))
+    owner = Column(
+        "owner", ForeignKey("users.uid"), default="cm0xu8fn70001nlpclah1myy9"
+    )
+    messages = Column("messages", JSON, default=[])
+    created_at = Column("created_at", DATETIME, default=datetime.utcnow)
+    updated_at = Column(
+        "updated_at", DATETIME, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    @classmethod
+    def get_session_by_id(cls, session: Session, session_id: str):
+        return session.query(ChatSession).filter(ChatSession.cid==session_id).first()
+
+
+    @classmethod
+    def create(cls, agent, messages: list = [], cid: str | None = None):
+        session = get_session()
+        try:
+            c_session = ChatSession()
+            if cid:
+                c_session.cid = cid
+            c_session.messages = messages
+            c_session.agent = agent
+            session.add(c_session)
+            session.commit()
+            session.refresh(c_session)
+            return c_session
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+        
+

@@ -10,7 +10,7 @@ from apis.storage.models import KnowledgeDocument
 from apis.storage.utils import find_agent_by_name
 
 from .utils import temp_save_file
-from nexabot.embeddings import save_embeddings
+from apis.nexabot.embeddings import save_embeddings
 
 document_router = APIRouter(prefix="/documents")
 

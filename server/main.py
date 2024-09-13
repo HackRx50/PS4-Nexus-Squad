@@ -3,6 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from os.path import join
+import sys
+import cuid
+
+from apis.nexabot.features import SessionManager
 
 load_dotenv()
 
@@ -27,6 +31,14 @@ hosting_path = join("deployments", "www.nexaflow.co")
 app.include_router(router)
 
 if __name__=="__main__":
-    from uvicorn import run
-    # run("main:app", host="0.0.0.0", port=443, reload=True, ssl_certfile="./certs/certificate.pem", ssl_keyfile="./certs/private-key.pem")
-    run("main:app", host="0.0.0.0", port=8000, reload=True)
+    if "chat" in sys.argv:
+        try:
+            chat_session_id = cuid.cuid()
+            sessionManager = SessionManager()
+            sessionManager.interact_cli(chat_session_id, "avnica")
+        except KeyboardInterrupt as e:
+            sessionManager.save_session(chat_session_id)
+    else:
+        from uvicorn import run
+        # run("main:app", host="0.0.0.0", port=443, reload=True, ssl_certfile="./certs/certificate.pem", ssl_keyfile="./certs/private-key.pem")
+        run("main:app", host="0.0.0.0", port=8000, reload=True)
