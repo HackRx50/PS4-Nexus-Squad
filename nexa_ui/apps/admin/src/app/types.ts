@@ -22,3 +22,23 @@ export type DocumentMetaData =  {
     vector_ids: string[];
     updated_at: string;
 }
+
+
+export type Agent =  {
+    owner: string;
+    name: string;
+    access: string;
+    agid: string;
+}
+
+export interface User {
+    email: string,
+    displayName: string,
+    emailVerified: boolean,
+    uid: string,
+    photoURL: string | null,
+    isAnonymous: boolean,
+    actions?: Action[];
+    agents?: Agent[]
+    documents?: DocumentMetaData[];
+}

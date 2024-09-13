@@ -61,8 +61,13 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
         subdomain = getSubdomain(host)
         request.state.subdomain = subdomain
         print(subdomain)
-        
-        if subdomain == 'admin':
+
+
+        if path.startswith("/api") and path.startswith("/docs") and path.startswith("/openapi.json"):
+            print("serving apis")
+            return await call_next(request)
+
+        if subdomain == 'admin' and not path.startswith("/api") and not path.startswith("/docs") and not path.startswith("/openapi.json"):
             content = getSPAContent(subdomain, path)
             mime_type, _ = guess_type(path)
             if not mime_type:

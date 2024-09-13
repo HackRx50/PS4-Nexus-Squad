@@ -135,7 +135,7 @@ class Action(Base):
     requirements = Column("requirements", String)
     agent = Column("agent", ForeignKey("agents.agid"))
     owner = Column(
-        "owner", ForeignKey("users.uid"), default="cm0xu8fn70001nlpclah1myy9"
+        "owner", String, default="cm0xu8fn70001nlpclah1myy9"
     )
     created_at = Column("created_at", DATETIME, default=datetime.utcnow)
     updated_at = Column(
