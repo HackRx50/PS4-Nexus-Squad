@@ -19,16 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@nexa_ui/shared';
 import { Button } from '@nexa_ui/shared';
 import { useTheme } from './theme-provider';
 import { useToast } from '@nexa_ui/shared';
-
-interface Action {
-  code: string;
-  created_at?: string;
-  description: string;
-  aid: string;
-  language: string;
-  title: string;
-  updated_at?: string;
-}
+import { Action } from '../types';
 
 interface ActionFormProps {
   code: string;
@@ -65,7 +56,6 @@ const ALLOWED_PACKAGES = [
   'sqlalchemy',
   'flask',
   'django',
-  // Add more safe packages as needed
 ];
 
 function ActionsForm({
@@ -109,7 +99,7 @@ function ActionsForm({
     language: string,
     requirements?: string
   ): Promise<{ message: string; actions: Action[] }> {
-    const response = await fetch('http://localhost:8000/api/v1/actions', {
+    const response = await fetch('http://avnica.localhost/api/v1/actions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -138,7 +128,7 @@ function ActionsForm({
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/actions/${editingAction.aid}`,
+        `http://avnica.localhost/api/v1/actions/${editingAction.aid}`,
         {
           method: 'PUT',
           headers: {
@@ -156,7 +146,6 @@ function ActionsForm({
       const data = await response.json();
 
       if (response.ok) {
-        // Update the local actions list with the updated action
         const updatedActions = actions.map((action) =>
           action.aid === editingAction.aid
             ? { ...action, code, language, title: actionTitle, requirements }

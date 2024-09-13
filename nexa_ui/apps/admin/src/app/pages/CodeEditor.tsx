@@ -3,28 +3,7 @@ import { useToast } from "@nexa_ui/shared";
 import { Toaster } from "@nexa_ui/shared";
 import ActionsForm from "../components/ActionsForm";
 import ActionsList from "../components/ActionsList";
-import actionsDummyData from "./actions.json";
-import documentsDummyData from "./documents.json";
-
-interface Action {
-  code: string;
-  created_at?: string;
-  description: string;
-  aid: string;
-  language: string;
-  title: string;
-  updated_at?: string;
-}
-
-interface Document {
-  doc_id: string;
-  title: string;
-  description: string;
-  file_type: string;
-  size: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { Action, DocumentMetaData } from "../types"
 
 type ToggleOption = 'action' | 'documents';
 
@@ -39,20 +18,15 @@ const SimpleCodeEditor: React.FC = () => {
 
   const [editingAction, setEditingAction] = useState<Action | null>(null);
   const [actions, setActions] = useState<Action[]>([]); // Update the state type
-  const [documents, setDocuments] = useState<Document[]>([]); // Update the state type
+  const [documents, setDocuments] = useState<DocumentMetaData[]>([]); // Update the state type
   const [editingActionID, setEditingActionID] = useState<string | null>(
     null
   );
 
   const { toast } = useToast();
 
-  useEffect(()=>{
-    setActions(actionsDummyData.actions)
-    setDocuments(documentsDummyData.documents)
-  },[])
-
   useEffect(() => {
-    fetch("/api/v1/actions")
+    fetch("http://avnica.localhost/api/v1/actions/")
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
@@ -75,8 +49,7 @@ const SimpleCodeEditor: React.FC = () => {
 
   const handleDeleteAction = async (id: string) => {
     try {
-      const response = await fetch(
-        `/api/v1/actions/${id}`,
+      const response = await fetch(`http://avnica.localhost/api/v1/actions/${id}`,
         {
           method: "DELETE",
         }
@@ -89,7 +62,7 @@ const SimpleCodeEditor: React.FC = () => {
 
         toast({
           title: data.message,
-          description: `The action with ${data.action.id} has been successfully deleted.`,
+          description: `The action with ${data.action_id} has been successfully deleted.`,
           duration: 3000,
         });
       } else {

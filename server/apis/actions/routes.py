@@ -41,8 +41,11 @@ def createAction(action_data: PostActionSchema, request: Request):
 
 @action_router.delete("/{action_id}")
 def deleteAction(action_id: str):
-    result = Action.delete_by_id(action_id=action_id)
-    if result:
-        return Response(status_code=204, content=f"Document with id: {action_id} deleted")
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Action doesn't exists")
+    try:
+        result = Action.delete_by_id(session=session, action_id=action_id)
+        if result:
+            return {"message": "Action deleted successfully", "action_id": action_id}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Action doesn't exists")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

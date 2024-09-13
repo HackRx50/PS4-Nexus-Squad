@@ -9,34 +9,14 @@ import {
 import { Button } from '@nexa_ui/shared';
 import { ScrollArea } from '@nexa_ui/shared';
 import { Edit, Trash2, Upload, Terminal } from 'lucide-react';
-
-interface Action {
-  code: string;
-  created_at?: string;
-  description: string;
-  aid: string;
-  language: string;
-  title: string;
-  updated_at?: string;
-}
-
-interface Document {
-  doc_id: string;
-  title: string;
-  description: string;
-  file_type: string;
-  size: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { Action, DocumentMetaData } from "../types";
 
 type ToggleOption = 'action' | 'documents';
 
 interface ActionsListProps {
   actions: Action[];
-  documentsData: Document[];
+  documentsData: DocumentMetaData[];
   selectedToggle: string;
-  // selectedActionIndex: number;
   handleEditAction: (actionID: string) => void;
   handleDeleteAction: (actionID: string) => void;
   handleToggle: (option: ToggleOption) => void;
@@ -115,17 +95,17 @@ const ActionsList: React.FC<ActionsListProps> = ({
               </CardContent>
             </Card>
           )) : documentsData.map((document) => (
-            <Card key={document.doc_id} className="mb-4 relative group">
+            <Card key={document.did} className="mb-4 relative group">
               <CardHeader className="py-3 flex flex-row items-center justify-between">
                 <CardTitle className="text-sm font-medium">
-                  {document.title}
+                  {document.name}
                 </CardTitle>
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     variant="ghost"
                     className='hidden'
                     size="icon"
-                    onClick={() => handleEditAction(document.doc_id)}
+                    onClick={() => handleEditAction(document.did)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -133,7 +113,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
                     variant="destructive"
                     size="icon"
                     className="scale-[.85]"
-                    onClick={() => handleDeleteAction(document.doc_id)}
+                    onClick={() => handleDeleteAction(document.did)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -141,7 +121,6 @@ const ActionsList: React.FC<ActionsListProps> = ({
               </CardHeader>
               <CardContent className="py-2">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span className="w-1/2">{document.description}</span>
                   <span className="mt-auto">{document.created_at}</span>
                 </div>
               </CardContent>
