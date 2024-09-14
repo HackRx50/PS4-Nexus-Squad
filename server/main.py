@@ -1,14 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from os.path import join
 import sys
 import cuid
 
 from apis.nexabot.features import SessionManager
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 from settings import CORS_ALLOWED_ORIGINS, BASE_DIR
 from apis import router

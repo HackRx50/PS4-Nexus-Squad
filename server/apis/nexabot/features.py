@@ -198,6 +198,8 @@ class SessionManager:
                     session_messages.append(ToolMessage.parse_obj(msg))
             self.sessions_messages[session.cid] = session_messages
             return session_messages
+        else:
+            return self.sessions_messages[session.cid]
 
 
     def handle_session(self, session_id: str, agent_name: str):
