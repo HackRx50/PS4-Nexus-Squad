@@ -2,8 +2,8 @@ import re
 
 from settings import AGENT_NOT_ALLOWED_NAME
 
-from apis.storage.db import get_session
-from apis.storage.models import Agent
+from storage.db import get_session
+from storage.models import Agent
 
 def is_valid_subdomain(name):
     pattern = r'^[a-z0-9]([a-z0-9-]*[a-z0-9])?$'

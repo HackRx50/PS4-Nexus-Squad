@@ -1,7 +1,7 @@
 from typing import List
 from sqlalchemy.orm.session import Session
 
-from .models import User, AccessLevel, Agent
+from .models import User, AccessLevel, Agent, Action
 
 
 def get_all_users(session: Session)-> List[User]:
@@ -11,7 +11,7 @@ def get_all_users(session: Session)-> List[User]:
 
 def find_agent_by_name(session: Session, name: str)->Agent | None:
     """Function to find an agent by name."""
-    return session.query(Agent).filter_by(name=name).first()
+    return session.query(Agent).filter(Agent.name==name).first()
 
 
 def find_agent_by_id(session: Session, id: str) -> Agent | None:
@@ -22,6 +22,19 @@ def find_agent_by_id(session: Session, id: str) -> Agent | None:
 def find_agents_by_user(session: Session, user_id: str)->List[Agent]:
     """Find all agents owned by a specific user."""
     return session.query(Agent).filter_by(owner=user_id).all()
+
+
+def get_actions_by_agent_name(session: Session, agent_name: str):
+    return (
+        session.query(Action)
+        .join(Agent, Action.agent == Agent.agid)
+        .filter(Agent.name == agent_name)
+        .all()
+    )
+
+def get_actions(session, action_id: str):
+    """Get all actions associated with this agent."""
+    return session.query(Action).filter_by(agent=action_id).all()
 
 
 def check_user_access(agent: Agent, user: User)-> bool:

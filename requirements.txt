@@ -1,9 +1,9 @@
 fastapi==0.114.1
 uvicorn==0.30.6
-langchain-mistralai==0.1.13
-langchain-community==0.2.16
-langgraph==0.2.19
-langgraph-checkpoint==1.0.9
+langchain-mistralai
+langchain-community
+langgraph
+langgraph-checkpoint
 python-dotenv==1.0.1
 cuid==0.4
 python-multipart==0.0.9
@@ -14,4 +14,7 @@ jq==1.8.0
 unstructured==0.15.10
 unstructured-client==0.25.8
 azure-ai-documentintelligence==1.0.0b4
-langchain-anthropic==0.1.23
+psycopg2==2.9.9
+psycopg2-binary==2.9.9
+alembic==1.13.2
+firebase-admin==6.5.0

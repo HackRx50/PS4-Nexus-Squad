@@ -35,7 +35,7 @@ if __name__=="__main__":
         try: 
             chat_session_id = cuid.cuid()
             sessionManager = SessionManager()
-            sessionManager.interact_cli(chat_session_id, "avnica")
+            sessionManager.interact_cli(chat_session_id, "head")
         except KeyboardInterrupt as e:
             sessionManager.save_session(chat_session_id)
     else:

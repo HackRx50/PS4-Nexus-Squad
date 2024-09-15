@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "meetgaze",
+  "private_key_id": "94cc66c7499817badee2397dd9b668ebfe2c7b88",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCcw4gBcXzHWNbg\nMW2UBp9gXuWpZK5j46m+KpYOjjjJibGs+kAY/N/CbW/0+8O4EqkP7x7yCax1M32M\ni/HASfVz1Iezpw2r1ig2uD/yqdF5Ba4ADna7nXfxTflbW8gImCIoAWIHLk8ow/e8\nSqDRJ0bSfDyUN+UzlLJx5uvuLH20G8e8PTP+bGB63BpIOWgZSNIh1nrwyqhUJuPZ\nGFDeNcHvy+9gyWK0JI9EPAp6TpjiFZB0/k4e2ULpVWcrEM3h0GBusGhH43dDWkKz\neq+fuR8U2MIZ0gcf6syvlWQjxRuUcShcqW3CQ3lgBD95xa9urVjZ0kg0DukPGKlW\nW1ZgMYyTAgMBAAECggEAMC2hx3vG8wc5JrbaLAOrCLWxlJFmTTnDSbgR3RBVoI7q\nZbSVbXiOFlWG8n5LxO8rOUPuuUlC0NRN0huSZVv1jS80s4B0YarUOhj/QkdxouWd\nd9P6Jqf7HFSv/aVkAUwsNypRo85WMrujkCFJcm5FRFw9S/ovvV4GR55GRTE0Qt1J\nDqFT9Jp13BAAhp1ePwhKoWw5ZhV2OZV/zM3I7mIbo2LurPJfSZvULeIg5zBAuI6B\nBt4oQEshEut4/GHGR3fkHW4yWubh30q77KbBvP2LZIcJNVB9ZXU/ViIthywwe/Rs\nZg+88AWQ7oaK69valgLXILKy3yBgC8hWWxWBh7PhGQKBgQDdlyvFE1d7IgMIG8Tk\nlTl42+yxg1hMu+Nx3hnYf1YgzfN3AeGHQQu1cCylu9OK+utOexPjx3QOqtKn/ydg\npwQhN0bT60HFNRj4bd0uFK1exnkvO0HFXTKY9Dcam6Ll9zu49DB465cDpsqJ6obA\nHjb9f0aiv/W6bst/a809IFDL6QKBgQC1G1Iogv5XosI/uZ719wqK0HLUQkqaZQn8\nBU6i0fM4w3QMDpcRqifYWe5zpIFy2U1HfnkcIwznCuT/MawrHXk5Qfh0y4yoKJ7o\n6GjzhiLfT7v101nHYD8T4cjKDTYzTI1AP19qXyeIOM2atfUNRg9gx8jRqvBwEyAv\n95wuEOPTGwKBgBd/vo6JvI88TiH//+NVx+B/QhyZFzYb/sTGjuscpd+Yt6b5NheH\n2FwHZ1S0FHz6mxWZi8RuFGqxxuE199ESJSf4mrRCkJj/RoSh8gC/BJu2ZIeTuyfY\n+FKsI2PY+W91xomYq8NHCJ7Eg1oY2u1oxuAfLTh5Lu/0a/Q5VGyVDrxxAoGAIqMF\nBYZ4Cl6wc+uWQUhsFbxkGcBL8Fden3qMXYt1zudirGOl9NTsJe6dMjTGJSb2JrRD\niWQStaVZwozHdr9+TbsWP5AmaIrMSZMZb2m6BaeENTGkvALmTXEjK7F3Kjx7z0vP\nfdKRBvaGLA6cvVsm2cWb3K2qqmSeBU5/6jeEuv0CgYEAvisFFMU1RlKUsVWehsn5\nCNVIMtioaHpcnKFQOH/CWnpLszflyjxfmlvh40OeeyjZ+6prPAKaUhCCDYsmM1v5\n0we30Bz8Zn1wL/yL8fKjJMgCFuzEhY8JSDqj+EjKvqXSF6Ch9go3/UwTXqaWZhe8\naryD8j+MJlqXeSDmN0AS4sE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "meetgaze-server@meetgaze.iam.gserviceaccount.com",
+  "client_id": "116972383966989615069",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/meetgaze-server%40meetgaze.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

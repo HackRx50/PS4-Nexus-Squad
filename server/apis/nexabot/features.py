@@ -12,9 +12,9 @@ from sqlalchemy.orm.session import Session
 
 from settings import MISTRAL_MODEL_TYPE
 
-from apis.storage.db import get_session
-from apis.storage.models import ChatSession, Action, Agent
-from apis.storage.utils import find_agent_by_id, find_agent_by_name
+from storage.db import get_session
+from storage.models import ChatSession, Action, Agent
+from storage.utils import find_agent_by_id, find_agent_by_name, get_actions_by_agent_name
 
 from .embeddings import get_vector_store
 
@@ -42,7 +42,7 @@ class NexaBot:
     def boot(self, db_session: Session)->bool:
         try:
             print("Booting agent...")
-            actions: List[Action] = Action.get_actions_by_agent_name(db_session, self.agent_name)
+            actions: List[Action] = get_actions_by_agent_name(db_session, self.agent_name)
             tools_ns = {}
             for action in actions:
                 try:
@@ -51,6 +51,7 @@ class NexaBot:
                         action.function_name = parse_id(action.title)
                     self.tools.append(tool(tools_ns[action.function_name]))
                 except Exception as e:
+                    print(e)
                     print("Cound't set tool:", action.title, action.function_name)
             print("Tools setup complete.")
 
@@ -59,6 +60,8 @@ class NexaBot:
             self.tools.append(vector_search_tool)
             print("\n\nBooting LLM...")
             llm = ChatMistralAI(model_name=MISTRAL_MODEL_TYPE)
+            if not self.llm:
+                self.llm = llm
             self.chatBot = create_react_agent(self.llm, self.tools)
             print("LLM booting Successfull")
             db_session.commit()
@@ -95,11 +98,11 @@ class SessionManager:
     def __init__(self, llm=None) -> None:
         self.llm = llm
 
-    def get_chat_session(self, session_id: str, agent_name: str):
+    def get_chat_session(self, session_id: str, agent_name: str, user_id: str = None):
         for session in self.chat_sessions:
             if session_id == session.cid:
                 return session
-        session = ChatSession.get_session_by_id(self.db_session, session_id)
+        session = ChatSession.get_session_by_id(self.db_session, session_id, user_id)
         if session:
             self.chat_sessions.append(session)
             return session
@@ -107,7 +110,7 @@ class SessionManager:
             agent: Agent = find_agent_by_name(self.db_session, agent_name)
             if not agent:
                 raise ValueError("Agent Not Found")
-            session = ChatSession.create(agent=agent.agid, cid=session_id)
+            session = ChatSession.create(agent=agent.agid, cid=session_id, user_id=user_id)
             self.chat_sessions.append(session)
             return session
 
@@ -139,7 +142,8 @@ class SessionManager:
             if not query.strip():
                 query = input("> ")
                 continue
-            self.talk(session, nexabot, query)
+            message, result  =self.talk(session, nexabot, query)
+            print(message)
             query = input("> ")
         try:
             self.save_session(session_id)
@@ -152,56 +156,72 @@ class SessionManager:
     def talk(self, session: ChatSession, nexabot: NexaBot, message: str):
         session_messages = self.sessions_messages.get(session.cid, [])
         session_messages.append(HumanMessage(content=message))
-        result = nexabot.invoke(session_messages)
+        from apis.sample import sampleInvoke
+        session_messages.pop()
+        result = sampleInvoke()
+        # result = nexabot.invoke(session_messages)
+        # session_messages.pop()
+        # session_messages = result["messages"]
 
-        last_three_response = result["messages"][-3:]
+        # last_three_response = result["messages"][-4:]
 
-        for message in last_three_response:
-            if isinstance(message, AIMessage):
-                if not message.content:
-                    continue
-                session_messages.append(message)
-            elif isinstance(message, HumanMessage):
-                session_messages.append(message)
+        # for message in last_three_response:
+        #     if isinstance(message, AIMessage):
+        #         if not message.content:
+        #             continue
+        #         session_messages.append(message)
+        #     elif isinstance(message, HumanMessage):
+        #         session_messages.append(message)
         
-        return (result["messages"][-1].content, last_three_response)
+        # return (result["messages"][-1].content, last_three_response)
+        last_three_response = [HumanMessage(content=message), *result]
+        for message in last_three_response:
+            session_messages.append(message)
+        return "Test Message", last_three_response
 
 
 
     def save_session(self, session_id: str):
-        chat_session = self.db_session.query(ChatSession).filter(ChatSession.cid == session_id).first()
-        if session_id in self.sessions_messages:
-            if chat_session:
-                chat_session.messages = self.transpile_session_messages(session_id)
-                self.db_session.commit()
-            else:
-                print(f"Session with id {session_id} not found in the database.")
+        try:
+            chat_session = self.db_session.query(ChatSession).filter(ChatSession.cid == session_id).first()
+            if session_id in self.sessions_messages:
+                if chat_session:
+                    chat_session.messages = self.transpile_session_messages(session_id)
+                    self.db_session.commit()
+                else:
+                    print(f"Session with id {session_id} not found in the database.")
+        except Exception as e:
+            print(e)
+            self.db_session.rollback()
+            print(f"Couldn't save session with id {session_id}")
 
 
     def transpile_session_messages(self, session_id: str):
         if session_id in self.sessions_messages:
             transpiled_messages = []
             for message in self.sessions_messages[session_id]:
-                transpiled_messages.append(message.json())
+                transpiled_messages.append(message.__dict__)
             return transpiled_messages
 
     def load_session_messages(self, session: ChatSession):
         if session.cid not in self.sessions_messages:
             session_messages = []
             for message in session.messages:
-                msg = json.loads(message)
-                if msg["type"] == "human":
-                    session_messages.append(HumanMessage.parse_obj(msg))
-                elif msg["type"] == "ai":
-                    session_messages.append(AIMessage.parse_obj(msg))
-                elif msg["type"] == "tool":
-                    session_messages.append(ToolMessage.parse_obj(msg))
+                message
+                if message["type"] == "human":
+                    session_messages.append(HumanMessage.parse_obj(message))
+                elif message["type"] == "ai":
+                    session_messages.append(AIMessage.parse_obj(message))
+                elif message["type"] == "tool":
+                    session_messages.append(ToolMessage.parse_obj(message))
             self.sessions_messages[session.cid] = session_messages
             return session_messages
+        else:
+            return self.sessions_messages[session.cid]
 
 
-    def handle_session(self, session_id: str, agent_name: str):
-        session: ChatSession = self.get_chat_session(session_id, agent_name)
+    def handle_session(self, session_id: str, agent_name: str, user_id: str = None):
+        session: ChatSession = self.get_chat_session(session_id, agent_name, user_id=user_id)
         nexabot = self.get_nexabot(session)
         self.load_session_messages(session)
         return session, nexabot
