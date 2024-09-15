@@ -4,17 +4,13 @@ import { Toaster } from '@nexa_ui/shared';
 import ActionsForm from '../components/ActionsForm';
 import ActionsList from '../components/ActionsList';
 import { Action, DocumentMetaData } from '../types';
-import MainRouteGuard from '../guards/MainRouteGuard';
-import AgentDashBoardGurad from '../guards/AgentDashboardGuard';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { addActions, addDocumentMetaData } from '../store';
-import { useParams } from 'react-router-dom';
-import { getActions, getDocuments } from '../utility';
-import { BASE_URL } from '../constants';
+import { useNavigate, useParams } from 'react-router-dom';
+import { appFetch, getActions, getDocuments } from '../utility';
+import AgentDashBoardGurad from '../guards/AgentDashboardGuard';
 
 type ToggleOption = 'action' | 'documents';
-
-
 
 const AgentDashboard: React.FC = () => {
   // action maker
@@ -24,48 +20,23 @@ const AgentDashboard: React.FC = () => {
   const [requirements, setRequirements] = useState('requests');
   const [invalidPackages, setInvalidPackages] = useState<string[]>([]);
   const [selectedToggle, setSelectedToggle] = useState<ToggleOption>('action');
-
   const [editingAction, setEditingAction] = useState<Action | null>(null);
+  const { agent_name } = useParams();
   const actionsMap = useAppSelector((state) => state.actionsSlice.actions);
-  const documentsMap = useAppSelector((state) => state.documentsSlice.documentMetaData);
-  const [actions, setActions] = useState<Action[]>([]);
+  const actions = actionsMap[agent_name!];
+
+  const user = useAppSelector((state) => state.userReducer.user);
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const [documents, setDocuments] = useState<DocumentMetaData[]>([]);
-  const [editingActionID, setEditingActionID] = useState<string | null>(null);
-
   const { toast } = useToast();
-  const { agent_name } = useParams();
-
-  useEffect(() => {
-    if (agent_name && actionsMap[agent_name]) {
-      setActions(actionsMap[agent_name]);
-    }
-  }, [agent_name, actionsMap]);
-  
-  useEffect(() => {
-    if (agent_name && documentsMap[agent_name]) {
-      setDocuments(documentsMap[agent_name]);
-    }
-  }, [agent_name, actionsMap]);
-
-  useEffect(() => {
-    getActions(agent_name!)
-      .then(actions => dispatch(addActions({ agent_name: agent_name!, actions })));
-    getDocuments(agent_name!)
-      .then(documents => dispatch(addDocumentMetaData({ agent_name: agent_name!, documents })));
-  }, []);
-
-
 
   const handleDeleteAction = async (id: string) => {
     try {
-      const response = await fetch(
-        BASE_URL`http://${agent_name!}.localhost/api/v1/actions/${id}`,
-        {
-          method: 'DELETE',
-        }
-      );
+      const response = await appFetch(`/api/v1/actions/${id}`, {
+        method: 'DELETE',
+        agent_name,
+      });
       const data = await response.json();
       console.log(data);
       if (response.ok) {
@@ -95,15 +66,32 @@ const AgentDashboard: React.FC = () => {
     setSelectedToggle(option);
   };
 
+
+  useEffect(() => {
+    if (user) {
+      appFetch(`/api/v1/agents/${agent_name}`, {
+        agent_name: "admin"
+      }).then(async (result) => {
+        const canWork = await result.json();
+        if (canWork.owner !== user?.uid) {
+          toast({
+            title: "Not Authorized",
+            description: "Agent Not Found",
+            duration: 3000
+          })
+          navigate("/agents");
+        }
+      })
+    }
+  }, [user, agent_name])
+
   return (
     <AgentDashBoardGurad>
       <div className="flex h-screen">
         <ActionsList
-          actions={actions}
           handleDeleteAction={handleDeleteAction}
           handleToggle={handleToggle}
           selectedToggle={selectedToggle}
-          documentsData={documents}
         />
 
         <ActionsForm

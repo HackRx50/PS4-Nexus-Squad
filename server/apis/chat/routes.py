@@ -9,6 +9,9 @@ chat_router = APIRouter(prefix="/chat")
 
 @chat_router.get("/{session_id}")
 def getChatSession(session_id: str, request: Request):
+    user_id = request.state.user_id
+    if not user_id:
+        user_id = None
     agent_name = request.state.subdomain
     session = session_manager.get_chat_session(session_id, agent_name)
     session.messages = session_manager.load_session_messages(session)

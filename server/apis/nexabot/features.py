@@ -12,9 +12,9 @@ from sqlalchemy.orm.session import Session
 
 from settings import MISTRAL_MODEL_TYPE
 
-from apis.storage.db import get_session
-from apis.storage.models import ChatSession, Action, Agent
-from apis.storage.utils import find_agent_by_id, find_agent_by_name
+from storage.db import get_session
+from storage.models import ChatSession, Action, Agent
+from storage.utils import find_agent_by_id, find_agent_by_name, get_actions_by_agent_name
 
 from .embeddings import get_vector_store
 
@@ -42,7 +42,7 @@ class NexaBot:
     def boot(self, db_session: Session)->bool:
         try:
             print("Booting agent...")
-            actions: List[Action] = Action.get_actions_by_agent_name(db_session, self.agent_name)
+            actions: List[Action] = get_actions_by_agent_name(db_session, self.agent_name)
             tools_ns = {}
             for action in actions:
                 try:
@@ -51,6 +51,7 @@ class NexaBot:
                         action.function_name = parse_id(action.title)
                     self.tools.append(tool(tools_ns[action.function_name]))
                 except Exception as e:
+                    print(e)
                     print("Cound't set tool:", action.title, action.function_name)
             print("Tools setup complete.")
 
@@ -59,6 +60,8 @@ class NexaBot:
             self.tools.append(vector_search_tool)
             print("\n\nBooting LLM...")
             llm = ChatMistralAI(model_name=MISTRAL_MODEL_TYPE)
+            if not self.llm:
+                self.llm = llm
             self.chatBot = create_react_agent(self.llm, self.tools)
             print("LLM booting Successfull")
             db_session.commit()
@@ -95,11 +98,11 @@ class SessionManager:
     def __init__(self, llm=None) -> None:
         self.llm = llm
 
-    def get_chat_session(self, session_id: str, agent_name: str):
+    def get_chat_session(self, session_id: str, agent_name: str, user_id: str = None):
         for session in self.chat_sessions:
             if session_id == session.cid:
                 return session
-        session = ChatSession.get_session_by_id(self.db_session, session_id)
+        session = ChatSession.get_session_by_id(self.db_session, session_id, user_id)
         if session:
             self.chat_sessions.append(session)
             return session
@@ -107,7 +110,7 @@ class SessionManager:
             agent: Agent = find_agent_by_name(self.db_session, agent_name)
             if not agent:
                 raise ValueError("Agent Not Found")
-            session = ChatSession.create(agent=agent.agid, cid=session_id)
+            session = ChatSession.create(agent=agent.agid, cid=session_id, user_id=user_id)
             self.chat_sessions.append(session)
             return session
 
@@ -139,7 +142,8 @@ class SessionManager:
             if not query.strip():
                 query = input("> ")
                 continue
-            self.talk(session, nexabot, query)
+            message, result  =self.talk(session, nexabot, query)
+            print(message)
             query = input("> ")
         try:
             self.save_session(session_id)

@@ -1,18 +1,12 @@
 import {
-    arrayRemove,
-    arrayUnion,
     collection,
-    deleteDoc,
     doc,
     getDoc,
-    getDocs,
-    onSnapshot,
     setDoc,
-    updateDoc,
 } from 'firebase/firestore';
-import { firestore } from './firebase.config';
+import { auth, firestore } from './firebase.config';
 import { Action, DocumentMetaData, User } from './types';
-import { BASE_URL } from './constants';
+import {  Domain } from './constants';
 
 
 export async function addUserDetails(user: User) {
@@ -49,18 +43,84 @@ export function checkIfEmpty(values: Record<string, any>) {
 }
 
 export async function getActions(agent_name: string) {
-    const response = await fetch(BASE_URL`http://${agent_name}.localhost/api/v1/actions/`)
+    const response = await appFetch(`/api/v1/actions/`, { agent_name })
     const data = await response.json();
-    console.log(data);
-    console.log(JSON.stringify(data));
     return data["actions"] as Action[];
 }
 
 export async function getDocuments(agent_name: string) {
-    const response = await fetch(BASE_URL`http://${agent_name}.localhost/api/v1/documents/`)
+    const response = await appFetch(`/api/v1/documents/`, { agent_name })
     const data = await response.json();
-    console.log(data);
-    console.log(JSON.stringify(data));
     return data["documents"] as DocumentMetaData[];
+}
+
+export async function getAgents() {
+    const response = await appFetch('/api/v1/agents', { agent_name: "admin" });
+    if (response.ok) {
+      const agents = await response.json();
+      return agents;
+    } else {
+        const error = await response.json();
+        console.log("Agents Fetch Error: ", error.details);
+        return null
+    }
+}
+
+
+
+export function BASE_URL(strings: TemplateStringsArray, ...values: (string | number)[]): string {
+    let fullUrl: string = strings.reduce((result, str, i) => result + str + (values[i] || ""), "");
+    if (Domain !== "localhost") {
+        fullUrl = fullUrl.replace(/^http:\/\//, 'https://');
+        fullUrl = fullUrl.replace('localhost', Domain);
+    }
+
+    return fullUrl;
+}
+
+async function getUserAuthToken(): Promise<string | null> {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      try {
+        const idToken = await currentUser.getIdToken();
+        return idToken;
+      } catch (error) {
+        console.error("Error getting user token:", error);
+        return null;
+      }
+    } else {
+      console.log("No user is signed in");
+        return null;
+    }
+}
+
+type DefaultHeaders = {
+    Authorization?: string,
+    "x-api-key"?: string,
+}
+
+
+export async function appFetch(url: string, options: RequestInit & { agent_name?: string, accessToken?: string  } = {}) {
+    const idToken = await getUserAuthToken();
+    let defaultHeaders: DefaultHeaders = {};
+    if (idToken) {    
+        defaultHeaders.Authorization =`Nexaflow ${idToken}`;
+    }
+    defaultHeaders['x-api-key'] = '075823263cf07d51a7d82c8fbb90c92d';
+
+    const updatedOptions: RequestInit = {
+        ...options,
+        headers: {
+            ...defaultHeaders,
+            ...(options.headers || {}),
+        },
+    };
+    if (options.agent_name) {
+        url = BASE_URL`http://${options.agent_name}.localhost${url}`
+    }
+    else {
+        url = BASE_URL `http://localhost${url}`
+    }
+    return fetch(url, updatedOptions);
 }
 

@@ -1,0 +1,6 @@
+.loader-simple {
+  svg path,
+  svg rect {
+    fill: #6d6dc3;
+  }
+}

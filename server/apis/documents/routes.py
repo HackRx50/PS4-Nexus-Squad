@@ -5,9 +5,9 @@ from fastapi import status
 
 from apis.agents.utils import is_used_by_other
 
-from apis.storage.db import get_session
-from apis.storage.models import KnowledgeDocument
-from apis.storage.utils import find_agent_by_name
+from storage.db import get_session
+from storage.models import KnowledgeDocument
+from storage.utils import find_agent_by_name
 
 from .utils import temp_save_file
 from apis.nexabot.embeddings import save_embeddings
@@ -38,7 +38,8 @@ async def upload_document(request: Request, file: UploadFile = File()):
         else:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agent not found")
     except HTTPException as he:
-        raise he  # Re-raise the FastAPI HTTPException
+        print(he)
+        raise he
     except Exception as e:
         print(e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")

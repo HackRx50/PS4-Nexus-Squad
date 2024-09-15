@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request, Response, HTTPException
 from fastapi import status
 
-from apis.storage.db import get_session
-from apis.storage.models import Action
-from apis.storage.utils import find_agent_by_name
+from storage.db import get_session
+from storage.models import Action
+from storage.utils import find_agent_by_name, get_actions_by_agent_name
 
 from apis.chat_session import session_manager
 
@@ -17,7 +17,7 @@ session = get_session()
 @action_router.get("/")
 def getActions(request: Request):
     subdomain = request.state.subdomain
-    actions = Action.get_actions_by_agent_name(session, subdomain)
+    actions = get_actions_by_agent_name(session, subdomain)
     return {
         "actions": actions
     }

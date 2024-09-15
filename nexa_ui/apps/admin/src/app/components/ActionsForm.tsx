@@ -24,7 +24,9 @@ import { getActions, getDocuments } from '../utility';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch } from '../hooks';
 import { addActions, addDocumentMetaData } from '../store';
-import { BASE_URL } from '../constants';
+import { appFetch } from '../utility';
+import { useAuth } from '../contexts/AuthContext';
+import Loading from './Loading';
 
 interface ActionFormProps {
   code: string;
@@ -64,16 +66,18 @@ const ALLOWED_PACKAGES = [
 ];
 
 const supportedExtensions = [
-  "txt",
-  "md",
-  "docx",
-  "xlsx",
-  "pptx",
-  "pdf",
-  "html",
-  "csv",
-  "json",
+  'txt',
+  'md',
+  'docx',
+  'xlsx',
+  'pptx',
+  'pdf',
+  'html',
+  'csv',
+  'json',
 ];
+
+const MAX_FILE_SIZE_MB = 10;
 
 function ActionsForm({
   code,
@@ -101,7 +105,11 @@ function ActionsForm({
   const [editingIndex, setEditingIndex] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [draggedOver, setDraggedOver] = useState(false);
+
+  const [actionSubmissionLoading, setActionSubmissionLoading] = useState(false);
+  
   const [uploading, setUploading] = useState(false);
+  
   const [error, setError] = useState<string | null>(null);
   const { agent_name } = useParams();
   const dispatch = useAppDispatch();
@@ -119,11 +127,11 @@ function ActionsForm({
     if (error) {
       toast({
         title: error,
-        duration: 1000,
-        variant: "destructive"
+        duration: 3000,
+        variant: 'destructive',
       });
     }
-  }, [error])
+  }, [error]);
 
   async function createAction(
     title: string,
@@ -131,26 +139,25 @@ function ActionsForm({
     language: string,
     requirements?: string
   ): Promise<{ message: string; count: number }> {
-    const response = await fetch(
-      BASE_URL`http://${agent_name!}.localhost/api/v1/actions`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title, code, language, requirements }),
-      }
-    );
+    setActionSubmissionLoading(true)
+    const response = await appFetch(`/api/v1/actions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      agent_name,
+      body: JSON.stringify({ title, code, language, requirements }),
+    });
     return await response.json();
   }
 
   const validateRequirements = (input: string) => {
+    if (input == "") return true;
     const packageSpecs = input.split(',').map((pkg) => pkg.trim());
     const invalid = packageSpecs.filter((spec) => {
       const [packageName] = spec.split(/[=<>]/);
       return !ALLOWED_PACKAGES.includes(packageName.toLowerCase());
     });
-    // setInvalidPackages(invalid);
     return invalid.length === 0;
   };
 
@@ -162,23 +169,19 @@ function ActionsForm({
     if (!editingAction) return;
 
     try {
-      const response = await fetch(
-        BASE_URL`http://${agent_name!}.localhost/api/v1/actions/${
-          editingAction.aid
-        }`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code,
-            language,
-            title: actionTitle,
-            requirements,
-          }),
-        }
-      );
+      const response = await appFetch(`/api/v1/actions/${editingAction.aid}`, {
+        method: 'PUT',
+        agent_name,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          language,
+          title: actionTitle,
+          requirements,
+        }),
+      });
 
       const data = await response.json();
 
@@ -235,26 +238,37 @@ function ActionsForm({
     e.preventDefault();
     if (!checkValidPackages()) return;
 
-    const newAction = await createAction(
-      actionTitle,
-      code,
-      language,
-      requirements
-    );
-    console.log(newAction);
-    toast({
-      title: 'Actions Created',
-      description: newAction.message,
-      variant: 'default',
-      duration: 5000,
-    });
-
-    const actions = await getActions(agent_name!);
-    dispatch(addActions({ agent_name: agent_name!, actions }));
-
-    setActionTitle('');
-    setCode('# Enter your Python code here');
-    setRequirements('');
+    try {
+      const newAction = await createAction(
+        actionTitle,
+        code,
+        language,
+        requirements
+      );
+      console.log(newAction);
+      toast({
+        title: 'Actions Created',
+        description: newAction.message,
+        variant: 'default',
+        duration: 5000,
+      });
+  
+      const actions = await getActions(agent_name!);
+      dispatch(addActions({ agent_name: agent_name!, actions }));
+  
+      setActionTitle('');
+      setCode('# Enter your Python code here');
+      setRequirements('');
+      setActionSubmissionLoading(false);
+    } catch(err) {
+      toast({
+        title: 'Action Creation Error',
+        description: `${err}`,
+        variant: 'default',
+        duration: 5000,
+      });
+      setActionSubmissionLoading(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,9 +277,16 @@ function ActionsForm({
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
 
       if (supportedExtensions.includes(fileExtension)) {
-        setSelectedFile(file);
+        if (file.size <= MAX_FILE_SIZE_MB * 1024 * 1024) {
+          setSelectedFile(file);
+          setError(null); // Clear error if file is valid
+        } else {
+          setSelectedFile(null);
+          setError('File size exceeds 10MB.');
+        }
       } else {
         setSelectedFile(null);
+        setError('Unsupported file type.');
       }
     }
   };
@@ -295,9 +316,14 @@ function ActionsForm({
 
   async function handleUpload(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.preventDefault();
-    
+
     if (!selectedFile) {
       setError('No file selected.');
+      return;
+    }
+
+    if (selectedFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setError('File size exceeds 10MB.');
       return;
     }
 
@@ -308,28 +334,40 @@ function ActionsForm({
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const response = await fetch(`${BASE_URL`http://${agent_name!}.localhost/api/v1/documents`}`, {
+      const response = await appFetch(`/api/v1/documents`, {
+        agent_name,
         method: 'POST',
         body: formData,
       });
 
-
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        const error = await response.json();
+        console.log(error);
+        setError(`Upload failed: ${error.detail}`);
+        return;
       }
 
       const { data: documentMetaData, message } = await response.json();
 
+      const documentsMetaData = await getDocuments(agent_name!);
+      console.log(documentMetaData, agent_name);
+      dispatch(
+        addDocumentMetaData({
+          agent_name: agent_name!,
+          documents: documentsMetaData,
+        })
+      );
+
       toast({
         title: message,
-        description: `Document with id is ${(documentMetaData as DocumentMetaData).did}`,
+        description: `Document with id is ${
+          (documentMetaData as DocumentMetaData).did
+        }`,
         variant: 'default',
         duration: 3000,
       });
-
-      const documentsMetaData = await getDocuments(agent_name!);
-      dispatch(addDocumentMetaData({ agent_name: agent_name!, documents: documentMetaData }))
     } catch (error) {
+      console.log(error);
       setError(`Upload failed: ${(error as any).message}`);
     } finally {
       setUploading(false);
@@ -338,6 +376,8 @@ function ActionsForm({
 
   return (
     <>
+      {uploading ? <Loading message='Uploading...'/> : ''}
+      {actionSubmissionLoading ? <Loading message='Creating...'/> : ''}
       <Card className={`w-2/3 flex flex-col`}>
         <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
           <CardTitle>
@@ -436,7 +476,7 @@ function ActionsForm({
               id="file-upload"
               type="file"
               className="hidden"
-              accept={supportedExtensions.map(ext => `.${ext}`).join(',')}
+              accept={supportedExtensions.map((ext) => `.${ext}`).join(',')}
               onChange={handleFileChange}
             />
             <Button
@@ -446,25 +486,46 @@ function ActionsForm({
               onDragLeave={() => setDraggedOver(false)}
               onClick={() => document.getElementById('file-upload')?.click()}
               className="w-full h-fit flex-1"
+              disabled={uploading}
             >
-              {draggedOver ? (
-                <>
-                  <div className="flex flex-col">
-                    <Files className='w-3/4' />
-                  </div>{' '}
-                  <div>Drop file Here</div>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 mr-2" /> Upload
-                </>
-              )}
+              <div className="flex flex-col justify-center items-center gap-4">
+                {draggedOver ? (
+                  <>
+                    <Files
+                      className={`transition-transform duration-500 ease-in-out transform ${
+                        draggedOver
+                          ? 'scale-150 text-blue-400'
+                          : 'scale-200 text-gray-500'
+                      }`}
+                    />
+                    <div>Drop file Here</div>
+                  </>
+                ) : (
+                  <>
+                    <Upload
+                      className={`transition-transform duration-500 ease-in-out transform ${
+                        draggedOver
+                          ? 'scale-150 text-blue-500'
+                          : 'scale-100 text-gray-500'
+                      }`}
+                    />
+                    Upload
+                  </>
+                )}
+              </div>
             </Button>
+
             <p className="my-6 text-sm text-center text-muted-foreground">
               Selected: {selectedFile ? selectedFile.name : 'None'}
             </p>
             {selectedFile ? (
-              <Button className="my-2 w-full" onClick={(e) => handleUpload(e)}>Upload</Button>
+              <Button
+                className="my-2 w-full"
+                disabled={uploading}
+                onClick={(e) => handleUpload(e)}
+              >
+                Upload
+              </Button>
             ) : null}
           </div>
         )}

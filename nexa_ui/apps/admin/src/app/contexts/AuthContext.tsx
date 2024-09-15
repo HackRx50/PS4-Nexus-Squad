@@ -44,7 +44,6 @@ import { User } from "../types";
   export async function saveUser(user: User) {
     try {
       const userDoc = doc(firestore, `users/${user.uid}`);
-      console.log(JSON.parse(JSON.stringify(user)));
       console.log(await setDoc(userDoc, JSON.parse(JSON.stringify(user))));
       return user;
     } catch (error) {
@@ -89,15 +88,12 @@ import { User } from "../types";
   
   export async function signupWithEmail(email: string, password: string) {
     const userCred = await createUserWithEmailAndPassword(auth, email, password);
-    console.log(userCred);
     await sendEmailVerification(userCred.user)
     return userCred;
   }
   
   export async function loginWithEmail(email: string, password: string) {
-    console.log("Login Button Press");
     const userCred = await signInWithEmailAndPassword(auth, email, password);
-    console.log(userCred);
     return userCred;
   }
   
@@ -109,7 +105,6 @@ import { User } from "../types";
     try {
       const user = await new Promise<FirebaseUser | null>((resolve, reject) => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
-          console.log(user);
           if (user) {
             resolve(user);
           } else {
@@ -146,12 +141,10 @@ import { User } from "../types";
       IsLoggedIn().then(async ([user, err]) => {
         console.assert(!err, err);
         console.assert(user, "User not loggedin");
-        console.log(user);
-  
         if (err) {
           setLoaded(AuthLoadStatus.ERROR);
         }
-  
+
         setCurrentUser(user);
         setLoaded(AuthLoadStatus.SUCCESS);
       });

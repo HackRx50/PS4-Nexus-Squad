@@ -21,9 +21,9 @@ import { useAppSelector } from '../hooks';
 import { setAgents } from '../store';
 import { useDispatch } from 'react-redux';
 import { PlusIcon, MessageCircle, Settings } from 'lucide-react';
+import { appFetch, BASE_URL, getAgents } from '../utility';
 import AgentDashBoardGurad from '../guards/AgentDashboardGuard';
 
-// Define the type for the agent
 type Agent = {
   owner: string;
   name: string;
@@ -38,6 +38,7 @@ function AgentCreatePopup() {
   const [error, setError] = useState<string | null>(null);
   const [submitCount, setSubmitCount] = useState(0);
   const { toast } = useToast();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (submitCount > 0) {
@@ -54,13 +55,14 @@ function AgentCreatePopup() {
 
   async function isAvailable(name: string) {
     try {
-      const response = await fetch(
-        'http://admin.localhost/api/v1/agents/check-name',
+      const response = await appFetch(
+        '/api/v1/agents/check-name',
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          agent_name: "admin",
           body: JSON.stringify({ name: newAgentInput }),
         }
       );
@@ -75,11 +77,12 @@ function AgentCreatePopup() {
   async function onSubmit() {
     try {
       if (await isAvailable(newAgentInput)) {
-        const response = await fetch('http://admin.localhost/api/v1/agents', {
+        const response = await appFetch('/api/v1/agents', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          agent_name: "admin",
           body: JSON.stringify({ name: newAgentInput }),
         });
 
@@ -89,6 +92,9 @@ function AgentCreatePopup() {
         // }
         const data = await response.json();
         setOpenStatus(false);
+        getAgents().then((agents) => {
+          dispatch(setAgents(agents))
+        })
         toast({
           title: data.message,
           duration: 1500,
@@ -164,27 +170,23 @@ function AgentCreatePopup() {
 
 const AgentsPage = () => {
   const agents = useAppSelector((state) => state.agentsSlice.agents);
+  const user = useAppSelector((state) => state.userReducer.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
-    getAgents();
-  }, []);
+    if (user) {
+      getAgents().then((agents) => {
+        dispatch(setAgents(agents))
+      })
+    }
+  }, [user]);
 
   useEffect(() => {
     console.log(agents);
   }, [agents]);
 
-  async function getAgents() {
-    const response = await fetch('http://admin.localhost/api/v1/agents');
-    const agents = await response.json();
-    console.log(agents);
-    dispatch(setAgents(agents));
-  }
 
-  const handleCreateAgent = () => {
-    navigate('/create-agent');
-  };
 
   return (
     <AgentDashBoardGurad>
@@ -195,12 +197,12 @@ const AgentsPage = () => {
         </div>
 
         <div className="flex flex-col items-center gap-6">
-          {agents.map((agent) => (
+          {agents && agents.map((agent) => (
             <Card key={agent.agid} className="w-full max-w-[1000px] p-4">
               <CardContent className="flex items-center justify-between h-full">
                 <h1 className="text-xl font-semibold">{agent.name}</h1>
                 <div className="flex gap-2">
-                  <a href={`http://${agent.name}.localhost/chat`}>
+                  <a href={BASE_URL`http://${agent.name}.localhost/chat`}>
                     <Button variant={'outline'}>
                       <MessageCircle />
                     </Button>

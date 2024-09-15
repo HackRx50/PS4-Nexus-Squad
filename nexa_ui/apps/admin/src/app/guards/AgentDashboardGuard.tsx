@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@nexa_ui/shared';
 
 import { useAppSelector } from '../hooks';
 import Spinner from '../components/Spinner';
+import CheckAuthLoader from './CheckAuthLoader';
 
 export default function AgentDashBoardGurad({ children }: { children: React.ReactNode }) {
   const { loaded } = useAuth();
@@ -19,25 +20,21 @@ export default function AgentDashBoardGurad({ children }: { children: React.Reac
   }, [agent_name])
 
   useEffect(() => {
-    if (!user && loaded !== AuthLoadStatus.IDLE) {
-      navigate('/');
+    if (loaded === AuthLoadStatus.IDLE && !user) {
+      return;
     }
-  }, [user]);
+    if (loaded === AuthLoadStatus.LOADING) {
+      return;
+    }
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+  }, [user, loaded, navigate]);
 
   if (!user && loaded === AuthLoadStatus.LOADING) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <h1 className="text-xl font-semibold">Checking Authentication Status</h1>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center">
-              <Spinner />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <CheckAuthLoader />
     );
   }
 

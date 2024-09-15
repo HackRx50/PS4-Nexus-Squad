@@ -4,7 +4,7 @@ import types
 import inspect
 import importlib
 
-from apis.storage.models import Action
+from storage.models import Action
 
 
 def create_action_file(code: str):
@@ -25,7 +25,7 @@ def store_actions(module_name: str, title: str, language: str, agent_id, uid=Non
             function_id = f"{function_name_id}_{attribute_name}"
             action = Action.create(
                 title=title,
-                function_name=function_id,
+                function_name=attribute_name,
                 description=attribute.__doc__,
                 code=code,
                 language=language,

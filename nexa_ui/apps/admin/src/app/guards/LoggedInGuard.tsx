@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@nexa_ui/shared';
 
 import { useAppSelector } from '../hooks';
 import Spinner from '../components/Spinner';
+import CheckAuthLoader from './CheckAuthLoader';
 
 export default function LoginPageGuard({ children }: { children: React.ReactNode }) {
   const { loaded } = useAuth();
@@ -13,24 +14,13 @@ export default function LoginPageGuard({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate('/agents');
     }
   }, [user]);
 
   if (!user && loaded === AuthLoadStatus.LOADING) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <h1 className="text-xl font-semibold">Checking Authentication Status</h1>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center">
-              <Spinner />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <CheckAuthLoader />
     );
   }
 

@@ -2,8 +2,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 from starlette.requests import Request
 
-from apis.storage.db import get_session
-from apis.storage.models import User
+from storage.db import get_session
+from storage.models import User
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
