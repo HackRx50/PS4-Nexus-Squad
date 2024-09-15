@@ -156,58 +156,72 @@ class SessionManager:
     def talk(self, session: ChatSession, nexabot: NexaBot, message: str):
         session_messages = self.sessions_messages.get(session.cid, [])
         session_messages.append(HumanMessage(content=message))
-        result = nexabot.invoke(session_messages)
+        from apis.sample import sampleInvoke
+        session_messages.pop()
+        result = sampleInvoke()
+        # result = nexabot.invoke(session_messages)
+        # session_messages.pop()
+        # session_messages = result["messages"]
 
-        last_three_response = result["messages"][-3:]
+        # last_three_response = result["messages"][-4:]
 
-        for message in last_three_response:
-            if isinstance(message, AIMessage):
-                if not message.content:
-                    continue
-                session_messages.append(message)
-            elif isinstance(message, HumanMessage):
-                session_messages.append(message)
+        # for message in last_three_response:
+        #     if isinstance(message, AIMessage):
+        #         if not message.content:
+        #             continue
+        #         session_messages.append(message)
+        #     elif isinstance(message, HumanMessage):
+        #         session_messages.append(message)
         
-        return (result["messages"][-1].content, last_three_response)
+        # return (result["messages"][-1].content, last_three_response)
+        last_three_response = [HumanMessage(content=message), *result]
+        for message in last_three_response:
+            session_messages.append(message)
+        return "Test Message", last_three_response
 
 
 
     def save_session(self, session_id: str):
-        chat_session = self.db_session.query(ChatSession).filter(ChatSession.cid == session_id).first()
-        if session_id in self.sessions_messages:
-            if chat_session:
-                chat_session.messages = self.transpile_session_messages(session_id)
-                self.db_session.commit()
-            else:
-                print(f"Session with id {session_id} not found in the database.")
+        try:
+            chat_session = self.db_session.query(ChatSession).filter(ChatSession.cid == session_id).first()
+            if session_id in self.sessions_messages:
+                if chat_session:
+                    chat_session.messages = self.transpile_session_messages(session_id)
+                    self.db_session.commit()
+                else:
+                    print(f"Session with id {session_id} not found in the database.")
+        except Exception as e:
+            print(e)
+            self.db_session.rollback()
+            print(f"Couldn't save session with id {session_id}")
 
 
     def transpile_session_messages(self, session_id: str):
         if session_id in self.sessions_messages:
             transpiled_messages = []
             for message in self.sessions_messages[session_id]:
-                transpiled_messages.append(message.json())
+                transpiled_messages.append(message.__dict__)
             return transpiled_messages
 
     def load_session_messages(self, session: ChatSession):
         if session.cid not in self.sessions_messages:
             session_messages = []
             for message in session.messages:
-                msg = json.loads(message)
-                if msg["type"] == "human":
-                    session_messages.append(HumanMessage.parse_obj(msg))
-                elif msg["type"] == "ai":
-                    session_messages.append(AIMessage.parse_obj(msg))
-                elif msg["type"] == "tool":
-                    session_messages.append(ToolMessage.parse_obj(msg))
+                message
+                if message["type"] == "human":
+                    session_messages.append(HumanMessage.parse_obj(message))
+                elif message["type"] == "ai":
+                    session_messages.append(AIMessage.parse_obj(message))
+                elif message["type"] == "tool":
+                    session_messages.append(ToolMessage.parse_obj(message))
             self.sessions_messages[session.cid] = session_messages
             return session_messages
         else:
             return self.sessions_messages[session.cid]
 
 
-    def handle_session(self, session_id: str, agent_name: str):
-        session: ChatSession = self.get_chat_session(session_id, agent_name)
+    def handle_session(self, session_id: str, agent_name: str, user_id: str = None):
+        session: ChatSession = self.get_chat_session(session_id, agent_name, user_id=user_id)
         nexabot = self.get_nexabot(session)
         self.load_session_messages(session)
         return session, nexabot

@@ -66,22 +66,25 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
         request.state.subdomain = subdomain
         print(subdomain)
         
-        api_key = request.headers.get("x-api-key")
 
-        try:
-            if api_key:
-                result = checkApiKey(api_key)
-                if not result:
-                    return JSONResponse(status_code=401, content={"detail": "Invalid API Key"})
-            else:
-                return JSONResponse(status_code=401, content={"detail": "No API Key Found"})
-        except Exception as e:
-            print(e)
-            return JSONResponse(status_code=401, content={"detail": "Invalid API Key"})
+        # Serve Docs
+        if subdomain == 'admin' and (path.startswith("/docs") or path.startswith("/openapi.json")):
+            return await call_next(request)
+        
+        # Check API Key
+        if path.startswith("/api"):
+            api_key = request.headers.get("x-api-key")
+            try:
+                if api_key:
+                    result = checkApiKey(api_key)
+                    if not result:
+                        return JSONResponse(status_code=401, content={"detail": "Invalid API Key"})
+                else:
+                    return JSONResponse(status_code=401, content={"detail": "No API Key Found"})
+            except Exception as e:
+                print(e)
+                return JSONResponse(status_code=401, content={"detail": "Invalid API Key"})
 
-        if path.startswith("/api/v1/chat"):
-            pass
-        elif path.startswith("/api"):
             authorization_token = request.headers.get("Authorization")
             if not authorization_token:
                 return JSONResponse(status_code=401, content={"detail": "No Authorization Found"})
@@ -89,13 +92,13 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
             if not result:
                 return JSONResponse(status_code=401, content={"detail": "Invalid Authorization Token"})
             request.state.user_id = result.user_id
+            return await call_next(request)
 
 
         if path.startswith("/api") and path.startswith("/docs") and path.startswith("/openapi.json"):
-            print("serving apis")
             return await call_next(request)
 
-        if subdomain == 'admin' and not path.startswith("/api") and not path.startswith("/docs") and not path.startswith("/openapi.json"):
+        if subdomain == 'admin':
             content = getSPAContent(subdomain, path)
             mime_type, _ = guess_type(path)
             if not mime_type:

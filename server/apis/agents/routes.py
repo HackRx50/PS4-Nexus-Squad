@@ -13,9 +13,8 @@ session = get_session()
 @agent_router.get("/")
 def getAgents(request: Request):
     user_id = request.state.user_id
-    print(user_id)
-    actions = session.query(Agent).filter(Agent.owner==user_id).all()
-    return actions
+    agents = session.query(Agent).filter(Agent.owner==user_id).all()
+    return agents
 
 @agent_router.get("/{agent_name}")
 def getAgent(agent_name: str):
