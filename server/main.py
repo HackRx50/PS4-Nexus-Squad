@@ -32,7 +32,7 @@ app.include_router(router)
 
 if __name__=="__main__":
     if "chat" in sys.argv:
-        try:
+        try: 
             chat_session_id = cuid.cuid()
             sessionManager = SessionManager()
             sessionManager.interact_cli(chat_session_id, "head")

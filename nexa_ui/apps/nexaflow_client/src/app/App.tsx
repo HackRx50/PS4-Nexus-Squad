@@ -12,8 +12,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/conversation/:agent_id" element={<Conversation />} />
-          <Route path="/conversation" element={<Conversation />} />
+          <Route path="/chat/:agent_id" element={<Conversation />} />
+          <Route path="/chat" element={<Conversation />} />
           <Route path="/actions" element={<CodeEditor />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
