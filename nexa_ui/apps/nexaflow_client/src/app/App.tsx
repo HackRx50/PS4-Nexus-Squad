@@ -3,6 +3,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import Conversation from "./pages/Conversation";
 import CodeEditor from "./pages/CodeEditor";
 import HomePage from "./pages/HomePage";
+import { createId } from "@paralleldrive/cuid2";
 
 import "../styles.css";
 
@@ -12,8 +13,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/chat/:agent_id" element={<Conversation />} />
-          <Route path="/chat" element={<Conversation />} />
+          <Route path="/chat/:session_id" element={<Conversation />} />
+          <Route path="/chat" element={<Navigate to={`/chat/${createId()}`} />} />
           <Route path="/actions" element={<CodeEditor />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
