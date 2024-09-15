@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 
-from apis.storage.db import get_session
-from apis.storage.models import Agent, Action
+from storage.db import get_session
+from storage.models import Agent, Action
 
 from .schemas import PostAgentSchema
 from .utils import canUseName
@@ -12,23 +12,22 @@ session = get_session()
 
 @agent_router.get("/")
 def getAgents(request: Request):
-    actions = session.query(Agent).all()
+    user_id = request.state.user_id
+    print(user_id)
+    actions = session.query(Agent).filter(Agent.owner==user_id).all()
     return actions
 
-@agent_router.get("/{agent_id}")
-def getAgent(agent_id: str):
-    agent = session.query(Agent).filter(Agent.agid == agent_id).first()
+@agent_router.get("/{agent_name}")
+def getAgent(agent_name: str):
+    agent = session.query(Agent).filter(Agent.name == agent_name).first()
     return agent
 
-@agent_router.get("/{agent_id}/actions")
-def getActionByAgentId(agent_id: str):
-    agent = session.query(Action).filter(Action.agent==agent_id).all()
-    return agent
 
 @agent_router.post("/")
 def createAgent(data: PostAgentSchema, request: Request):
+    user_id = request.state.user_id
     if canUseName(data.name):
-        new_agent = Agent(data.name)
+        new_agent = Agent(data.name, owner=user_id)
         session.add(new_agent)
         session.commit()
         return { "message": "Agent Created Successfully", "agent_id": new_agent.agid}

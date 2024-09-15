@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@nexa_ui/shared';
-import { Copy, Sun, Moon, Upload } from 'lucide-react';
+import { Copy, Sun, Moon, Upload, Files } from 'lucide-react';
 import { Input } from '@nexa_ui/shared';
 import { lazy, Suspense } from 'react';
 import { Label } from '@nexa_ui/shared';
@@ -19,16 +19,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@nexa_ui/shared';
 import { Button } from '@nexa_ui/shared';
 import { useTheme } from './theme-provider';
 import { useToast } from '@nexa_ui/shared';
-
-interface Action {
-  code: string;
-  created_at?: string;
-  description: string;
-  aid: string;
-  language: string;
-  title: string;
-  updated_at?: string;
-}
+import { Action, DocumentMetaData } from '../types';
+import { getActions, getDocuments } from '../utility';
+import { useParams } from 'react-router-dom';
+import { useAppDispatch } from '../hooks';
+import { addActions, addDocumentMetaData } from '../store';
+import { appFetch } from '../utility';
+import { useAuth } from '../contexts/AuthContext';
+import Loading from './Loading';
 
 interface ActionFormProps {
   code: string;
@@ -65,8 +63,21 @@ const ALLOWED_PACKAGES = [
   'sqlalchemy',
   'flask',
   'django',
-  // Add more safe packages as needed
 ];
+
+const supportedExtensions = [
+  'txt',
+  'md',
+  'docx',
+  'xlsx',
+  'pptx',
+  'pdf',
+  'html',
+  'csv',
+  'json',
+];
+
+const MAX_FILE_SIZE_MB = 10;
 
 function ActionsForm({
   code,
@@ -93,6 +104,15 @@ function ActionsForm({
   const { theme, setTheme } = useTheme();
   const [editingIndex, setEditingIndex] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [draggedOver, setDraggedOver] = useState(false);
+
+  const [actionSubmissionLoading, setActionSubmissionLoading] = useState(false);
+  
+  const [uploading, setUploading] = useState(false);
+  
+  const [error, setError] = useState<string | null>(null);
+  const { agent_name } = useParams();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (editingAction) {
@@ -103,29 +123,41 @@ function ActionsForm({
     }
   }, [editingAction]);
 
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: error,
+        duration: 3000,
+        variant: 'destructive',
+      });
+    }
+  }, [error]);
+
   async function createAction(
     title: string,
     code: string,
     language: string,
     requirements?: string
-  ): Promise<{ message: string; actions: Action[] }> {
-    const response = await fetch('http://localhost:8000/api/v1/actions', {
+  ): Promise<{ message: string; count: number }> {
+    setActionSubmissionLoading(true)
+    const response = await appFetch(`/api/v1/actions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      agent_name,
       body: JSON.stringify({ title, code, language, requirements }),
     });
     return await response.json();
   }
 
   const validateRequirements = (input: string) => {
+    if (input == "") return true;
     const packageSpecs = input.split(',').map((pkg) => pkg.trim());
     const invalid = packageSpecs.filter((spec) => {
       const [packageName] = spec.split(/[=<>]/);
       return !ALLOWED_PACKAGES.includes(packageName.toLowerCase());
     });
-    // setInvalidPackages(invalid);
     return invalid.length === 0;
   };
 
@@ -137,26 +169,23 @@ function ActionsForm({
     if (!editingAction) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/v1/actions/${editingAction.aid}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code,
-            language,
-            title: actionTitle,
-            requirements,
-          }),
-        }
-      );
+      const response = await appFetch(`/api/v1/actions/${editingAction.aid}`, {
+        method: 'PUT',
+        agent_name,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          language,
+          title: actionTitle,
+          requirements,
+        }),
+      });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Update the local actions list with the updated action
         const updatedActions = actions.map((action) =>
           action.aid === editingAction.aid
             ? { ...action, code, language, title: actionTitle, requirements }
@@ -190,8 +219,7 @@ function ActionsForm({
     }
   };
 
-  const handleCreateAction = async (e: React.FormEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  function checkValidPackages() {
     if (!validateRequirements(requirements)) {
       toast({
         title: 'Invalid packages',
@@ -201,31 +229,155 @@ function ActionsForm({
         variant: 'destructive',
         duration: 5000,
       });
+      return false;
+    }
+    return true;
+  }
+
+  const handleCreateAction = async (e: React.FormEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (!checkValidPackages()) return;
+
+    try {
+      const newAction = await createAction(
+        actionTitle,
+        code,
+        language,
+        requirements
+      );
+      console.log(newAction);
+      toast({
+        title: 'Actions Created',
+        description: newAction.message,
+        variant: 'default',
+        duration: 5000,
+      });
+  
+      const actions = await getActions(agent_name!);
+      dispatch(addActions({ agent_name: agent_name!, actions }));
+  
+      setActionTitle('');
+      setCode('# Enter your Python code here');
+      setRequirements('');
+      setActionSubmissionLoading(false);
+    } catch(err) {
+      toast({
+        title: 'Action Creation Error',
+        description: `${err}`,
+        variant: 'default',
+        duration: 5000,
+      });
+      setActionSubmissionLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+
+      if (supportedExtensions.includes(fileExtension)) {
+        if (file.size <= MAX_FILE_SIZE_MB * 1024 * 1024) {
+          setSelectedFile(file);
+          setError(null); // Clear error if file is valid
+        } else {
+          setSelectedFile(null);
+          setError('File size exceeds 10MB.');
+        }
+      } else {
+        setSelectedFile(null);
+        setError('Unsupported file type.');
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+
+      if (supportedExtensions.includes(fileExtension)) {
+        setSelectedFile(file);
+        // setError(null);
+      } else {
+        setSelectedFile(null);
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggedOver(true);
+  };
+
+  async function handleUpload(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    e.preventDefault();
+
+    if (!selectedFile) {
+      setError('No file selected.');
       return;
     }
-    const newAction = await createAction(
-      actionTitle,
-      code,
-      language,
-      requirements
-    );
-    console.log(newAction);
-    setActions([...actions, ...newAction.actions]);
-    setActionTitle('');
-    setCode('# Enter your Python code here');
-    setRequirements('');
-    // setInvalidPackages([]);
-  };
 
+    if (selectedFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setError('File size exceeds 10MB.');
+      return;
+    }
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files ? event.target.files[0] : null;
-    setSelectedFile(file);
-    console.log('File selected:', file?.name);
-  };
+    setUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const response = await appFetch(`/api/v1/documents`, {
+        agent_name,
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.log(error);
+        setError(`Upload failed: ${error.detail}`);
+        return;
+      }
+
+      const { data: documentMetaData, message } = await response.json();
+
+      const documentsMetaData = await getDocuments(agent_name!);
+      console.log(documentMetaData, agent_name);
+      dispatch(
+        addDocumentMetaData({
+          agent_name: agent_name!,
+          documents: documentsMetaData,
+        })
+      );
+
+      toast({
+        title: message,
+        description: `Document with id is ${
+          (documentMetaData as DocumentMetaData).did
+        }`,
+        variant: 'default',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.log(error);
+      setError(`Upload failed: ${(error as any).message}`);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <>
+      {uploading ? <Loading message='Uploading...'/> : ''}
+      {actionSubmissionLoading ? <Loading message='Creating...'/> : ''}
       <Card className={`w-2/3 flex flex-col`}>
         <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
           <CardTitle>
@@ -319,24 +471,62 @@ function ActionsForm({
             </Button>
           </CardContent>
         ) : (
-          <div className="p-4 border-t mt-auto h-full">
+          <div className="p-4 border-t mt-auto h-full flex flex-col">
             <Input
               id="file-upload"
               type="file"
               className="hidden"
+              accept={supportedExtensions.map((ext) => `.${ext}`).join(',')}
               onChange={handleFileChange}
             />
             <Button
               variant="outline"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragLeave={() => setDraggedOver(false)}
               onClick={() => document.getElementById('file-upload')?.click()}
-              className="w-full h-[75vh]"
+              className="w-full h-fit flex-1"
+              disabled={uploading}
             >
-              <Upload className="w-4 mr-2" />
-              Upload File
+              <div className="flex flex-col justify-center items-center gap-4">
+                {draggedOver ? (
+                  <>
+                    <Files
+                      className={`transition-transform duration-500 ease-in-out transform ${
+                        draggedOver
+                          ? 'scale-150 text-blue-400'
+                          : 'scale-200 text-gray-500'
+                      }`}
+                    />
+                    <div>Drop file Here</div>
+                  </>
+                ) : (
+                  <>
+                    <Upload
+                      className={`transition-transform duration-500 ease-in-out transform ${
+                        draggedOver
+                          ? 'scale-150 text-blue-500'
+                          : 'scale-100 text-gray-500'
+                      }`}
+                    />
+                    Upload
+                  </>
+                )}
+              </div>
             </Button>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Selected: {selectedFile ? selectedFile.name : 'None'}
-              </p>
+
+            <p className="my-6 text-sm text-center text-muted-foreground">
+              Selected: {selectedFile ? selectedFile.name : 'None'}
+            </p>
+            {selectedFile ? (
+              <Button
+                className="my-2 w-full"
+                disabled={uploading}
+                onClick={(e) => handleUpload(e)}
+              >
+                Upload
+              </Button>
+            ) : null}
           </div>
         )}
       </Card>

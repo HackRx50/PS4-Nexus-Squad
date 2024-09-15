@@ -7,6 +7,7 @@ import { ArrowRight, Upload, Loader2 } from "lucide-react";
 import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useLocation } from 'react-router-dom';
 
 interface Message {
   content: string;
@@ -20,8 +21,40 @@ function ChatPanel() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [llmResponseLoading, setLLMResponseLoading] = useState(false);
+  const [convoID, setConvoID] = useState<string | undefined>("")
   
   const { agent_id } = useParams<{ agent_id: string }>();
+  const location = useLocation();
+
+  useEffect(()=>{
+    const url = location.pathname;  
+    setConvoID(url.split('/').pop());    
+  },[])
+
+  const fetchSessionData = async ()  => { 
+    try {
+      const response = await fetch(`http://avnica.localhost:8000/api/v1/chat/fkahkf`,{
+        method:"GET",
+        headers:{ 
+          'Content-Type': 'application/json' 
+        },
+      }) 
+      const sessionData = await response.json(); 
+      console.log('sessionData', sessionData)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  fetchSessionData()
+
+  useEffect(()=>{
+    // if(convoID){
+    // }
+  },[])
+
+  useEffect(()=>{
+    console.log('agent_id', agent_id)
+  },[agent_id])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -87,13 +120,6 @@ function ChatPanel() {
     }
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files ? event.target.files[0] : null;
-    setSelectedFile(file);
-    // TODO: Handle file upload logic here
-    console.log("File selected:", file?.name);
-  };
-
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -102,27 +128,7 @@ function ChatPanel() {
           <h2 className="text-lg font-semibold">Nexaflow</h2>
           {/* Add more sidebar elements as needed */}
         </div>
-        <div className="p-4 border-t">
-          <Input
-            id="file-upload"
-            type="file"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <Button 
-            variant="outline" 
-            onClick={() => document.getElementById('file-upload')?.click()}
-            className="w-full"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload File
-          </Button>
-          {selectedFile && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Selected: {selectedFile.name}
-            </p>
-          )}
-        </div>
+
       </Card>
 
       {/* Main chat area */}

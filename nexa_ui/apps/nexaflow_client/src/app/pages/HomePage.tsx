@@ -14,7 +14,7 @@ const HomePage: React.FC = () => {
           <Link to="/actions">Setup Actions</Link>
         </Button>
         <Button asChild>
-          <Link to="/conversation">Start Conversation</Link>
+          <Link to="/chat">Start Conversation</Link>
         </Button>
       </div>
     </div>

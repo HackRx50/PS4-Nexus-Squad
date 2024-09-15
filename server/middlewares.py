@@ -1,12 +1,16 @@
 from fastapi import Request, Response
+from starlette.responses import JSONResponse
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from mimetypes import guess_type
 from os.path import join
 import os
 
-from apis.storage.db import get_session
-from apis.storage.utils import find_agent_by_name
+from storage.db import get_session
+from storage.utils import find_agent_by_name
 from settings import BASE_DIR
+
+from utils import authenticate_with_token, checkApiKey
 
 def getSubdomain(url: str):
     domain_parts = url.split(".")
@@ -62,12 +66,42 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
         request.state.subdomain = subdomain
         print(subdomain)
         
-        if subdomain == 'admin':
+        api_key = request.headers.get("x-api-key")
+
+        try:
+            if api_key:
+                result = checkApiKey(api_key)
+                if not result:
+                    return JSONResponse(status_code=401, content={"detail": "Invalid API Key"})
+            else:
+                return JSONResponse(status_code=401, content={"detail": "No API Key Found"})
+        except Exception as e:
+            print(e)
+            return JSONResponse(status_code=401, content={"detail": "Invalid API Key"})
+
+        if path.startswith("/api/v1/chat"):
+            pass
+        elif path.startswith("/api"):
+            authorization_token = request.headers.get("Authorization")
+            if not authorization_token:
+                return JSONResponse(status_code=401, content={"detail": "No Authorization Found"})
+            result = authenticate_with_token(authorization_token)
+            if not result:
+                return JSONResponse(status_code=401, content={"detail": "Invalid Authorization Token"})
+            request.state.user_id = result.user_id
+
+
+        if path.startswith("/api") and path.startswith("/docs") and path.startswith("/openapi.json"):
+            print("serving apis")
+            return await call_next(request)
+
+        if subdomain == 'admin' and not path.startswith("/api") and not path.startswith("/docs") and not path.startswith("/openapi.json"):
             content = getSPAContent(subdomain, path)
             mime_type, _ = guess_type(path)
             if not mime_type:
                 mime_type = "text/html"
             return Response(content, media_type=mime_type)
+        
         
         if (subdomain == '' or subdomain == 'www' or self.isAgentExists(subdomain)) and not path.startswith("/api") and not path.startswith("/docs") and not path.startswith("/openapi.json"):
             content = getSPAContent('www', path)

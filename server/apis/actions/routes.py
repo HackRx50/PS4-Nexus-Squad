@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request, Response, HTTPException
 from fastapi import status
 
-from apis.storage.db import get_session
-from apis.storage.models import Action
-from apis.storage.utils import find_agent_by_name
+from storage.db import get_session
+from storage.models import Action
+from storage.utils import find_agent_by_name, get_actions_by_agent_name
 
 from apis.chat_session import session_manager
 
@@ -17,7 +17,7 @@ session = get_session()
 @action_router.get("/")
 def getActions(request: Request):
     subdomain = request.state.subdomain
-    actions = Action.get_actions_by_agent_name(session, subdomain)
+    actions = get_actions_by_agent_name(session, subdomain)
     return {
         "actions": actions
     }
@@ -41,8 +41,11 @@ def createAction(action_data: PostActionSchema, request: Request):
 
 @action_router.delete("/{action_id}")
 def deleteAction(action_id: str):
-    result = Action.delete_by_id(action_id=action_id)
-    if result:
-        return Response(status_code=204, content=f"Document with id: {action_id} deleted")
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Action doesn't exists")
+    try:
+        result = Action.delete_by_id(session=session, action_id=action_id)
+        if result:
+            return {"message": "Action deleted successfully", "action_id": action_id}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Action doesn't exists")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
