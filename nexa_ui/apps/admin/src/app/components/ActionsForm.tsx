@@ -245,7 +245,6 @@ function ActionsForm({
         language,
         requirements
       );
-      console.log(newAction);
       toast({
         title: 'Actions Created',
         description: newAction.message,

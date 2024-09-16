@@ -9,6 +9,7 @@ from .base import Base
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
     cid = Column("sid", String, primary_key=True, default=cuid.cuid)
+    title = Column("title", String, default="New Chat")
     agent = Column("agent", ForeignKey("agents.agid"))
     owner = Column(
         "owner", String, default="cm0xu8fn70001nlpclah1myy9"

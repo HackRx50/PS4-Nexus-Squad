@@ -1,6 +1,20 @@
+export type AuthDetails = {
+    accessToken: string | null
+}
+
+export type Session = {
+    agent: string;
+    cid: string;
+    title?:string
+    created_at: string;
+    messages?: Message[];
+    owner: string;
+    updated_at: string;
+}
+
 export interface Message {
     content: string;
-    additional_kwargs: {
+    additional_kwargs?: {
         tool_calls?: {
             id: string;
             function?: {
@@ -9,7 +23,7 @@ export interface Message {
             };
         }[];
     };
-    response_metadata: {
+    response_metadata?: {
         token_usage?: {
             prompt_tokens: number;
             total_tokens: number;

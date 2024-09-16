@@ -55,17 +55,14 @@ function AgentCreatePopup() {
 
   async function isAvailable(name: string) {
     try {
-      const response = await appFetch(
-        '/api/v1/agents/check-name',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          agent_name: "admin",
-          body: JSON.stringify({ name: newAgentInput }),
-        }
-      );
+      const response = await appFetch('/api/v1/agents/check-name', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        agent_name: 'admin',
+        body: JSON.stringify({ name: newAgentInput }),
+      });
       const data = await response.json();
       return data.data.result as boolean;
     } catch (error) {
@@ -82,7 +79,7 @@ function AgentCreatePopup() {
           headers: {
             'Content-Type': 'application/json',
           },
-          agent_name: "admin",
+          agent_name: 'admin',
           body: JSON.stringify({ name: newAgentInput }),
         });
 
@@ -93,8 +90,8 @@ function AgentCreatePopup() {
         const data = await response.json();
         setOpenStatus(false);
         getAgents().then((agents) => {
-          dispatch(setAgents(agents))
-        })
+          dispatch(setAgents(agents));
+        });
         toast({
           title: data.message,
           duration: 1500,
@@ -177,15 +174,10 @@ const AgentsPage = () => {
   useEffect(() => {
     if (user) {
       getAgents().then((agents) => {
-        dispatch(setAgents(agents))
-      })
+        dispatch(setAgents(agents));
+      });
     }
   }, [user]);
-
-  useEffect(() => {
-    console.log(agents);
-  }, [agents]);
-
 
 
   return (
@@ -197,26 +189,32 @@ const AgentsPage = () => {
         </div>
 
         <div className="flex flex-col items-center gap-6">
-          {agents && agents.map((agent) => (
-            <Card key={agent.agid} className="w-full max-w-[1000px] p-4">
-              <CardContent className="flex items-center justify-between h-full">
-                <h1 className="text-xl font-semibold">{agent.name}</h1>
-                <div className="flex gap-2">
-                  <a href={BASE_URL`http://${agent.name}.localhost/chat`}>
-                    <Button variant={'outline'}>
-                      <MessageCircle />
+          {agents &&
+            agents.map((agent) => (
+              <Card key={agent.agid} className="w-full max-w-[1000px] p-4">
+                <CardContent className="flex items-center justify-between h-full">
+                  <h1 className="text-xl font-semibold">{agent.name}</h1>
+                  <div className="flex gap-2">
+                    <a href={BASE_URL`http://${agent.name}.localhost/chat`}>
+                      <Button variant={'outline'}>
+                        <MessageCircle />
+                      </Button>
+                    </a>
+                    <Button
+                      variant={'outline'}
+                      onClick={() => navigate(`${agent.name}`)}
+                    >
+                      <Settings />
                     </Button>
-                  </a>
-                  <Button
-                    variant={'outline'}
-                    onClick={() => navigate(`${agent.name}`)}
-                  >
-                    <Settings />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </div>
+                </CardContent>
+                <CardContent className='py-0'>
+                  <div className="flex justify-end text-xs text-muted-foreground">
+                    <span>{agent.created_at}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
         </div>
         <Toaster />
       </div>

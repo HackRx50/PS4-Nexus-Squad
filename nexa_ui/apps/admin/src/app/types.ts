@@ -29,6 +29,8 @@ export type Agent =  {
     name: string;
     access: string;
     agid: string;
+    created_at: string;
+    update_at: string;
 }
 
 export interface User {
@@ -41,4 +43,5 @@ export interface User {
     actions?: Action[];
     agents?: Agent[]
     documents?: DocumentMetaData[];
+    accessToken?: string
 }
