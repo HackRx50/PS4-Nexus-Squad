@@ -28,10 +28,14 @@ const LoginPage = () => {
         setFormSubmissionLoading(false);
         return;
       }
+      const accessToken = credential.user.getIdToken();
+      user!.accessToken = await accessToken;
+    
       setCurrentUser!(user);
       setFormSubmissionLoading(false);
     } catch (error: any) {
-      setError(error.message || 'Login failed');
+      setFormSubmissionLoading(false);
+      setError(error || 'Login failed');
     }
   };
 

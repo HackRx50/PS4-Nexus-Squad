@@ -1,5 +1,5 @@
 from fastapi import Request, Response
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from mimetypes import guess_type
@@ -10,33 +10,7 @@ from storage.db import get_session
 from storage.utils import find_agent_by_name
 from settings import BASE_DIR
 
-from utils import authenticate_with_token, checkApiKey
-
-def getSubdomain(url: str):
-    domain_parts = url.split(".")
-    if len(domain_parts) == 2 and domain_parts[1].startswith("localhost"):
-        return domain_parts[0]
-    if len(domain_parts) > 2:
-        return ".".join(domain_parts[:-2])
-    else:
-        return "www"
-
-def getSPAContent(subdomain: str, path: str):
-    spa_path = join(BASE_DIR, "deployments", subdomain) 
-    print(spa_path, path)
-    content = None
-    if path == "/":
-        path = "index.html"
-    else:
-        path = path[1:]
-    print(join(spa_path, path), "exists:", os.path.exists(join(spa_path, path)))
-    if os.path.exists(join(spa_path, path)):
-        with open(join(spa_path, path), 'br') as file:
-            content = file.read()
-    else:
-        with open(join(spa_path, "index.html"), 'br') as file:
-            content = file.read()
-    return content
+from utils import authenticate_with_token, checkApiKey, getSPAContent, getSubdomain
 
 
 class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
@@ -83,11 +57,11 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
                     return JSONResponse(status_code=401, content={"detail": "No API Key Found"})
             except Exception as e:
                 print(e)
-                return JSONResponse(status_code=401, content={"detail": "Invalid API Key"})
+                return JSONResponse(status_code=401, content={"detail": "Error validating api key"})
 
             authorization_token = request.headers.get("Authorization")
             if not authorization_token:
-                return JSONResponse(status_code=401, content={"detail": "No Authorization Found"})
+                return JSONResponse(status_code=401, content={"detail": "No Authorization Found", "redirect": "http://admin.localhost/login" })
             result = authenticate_with_token(authorization_token)
             if not result:
                 return JSONResponse(status_code=401, content={"detail": "Invalid Authorization Token"})

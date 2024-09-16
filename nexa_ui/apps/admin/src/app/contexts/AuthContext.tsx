@@ -44,14 +44,14 @@ import { User } from "../types";
   export async function saveUser(user: User) {
     try {
       const userDoc = doc(firestore, `users/${user.uid}`);
-      console.log(await setDoc(userDoc, JSON.parse(JSON.stringify(user))));
+      await setDoc(userDoc, JSON.parse(JSON.stringify(user)));
       return user;
     } catch (error) {
       console.log(error);
       alert("Couldn't save user");
     }
   }
-  
+
   export async function checkUserExists(
     uid: string
   ): Promise<[User | null, Error | null]> {
@@ -120,6 +120,7 @@ import { User } from "../types";
       if (!userData && error) {
         return [null, error];
       }
+      userData!.accessToken = await user.getIdToken();
       return [userData, null];
     } catch (error) {
       return [null, error];
@@ -136,7 +137,7 @@ import { User } from "../types";
     const [loaded, setLoaded] = useState<AuthLoadStatus>(AuthLoadStatus.IDLE);
   
     function LoggedInGuard() {
-      console.log("Checking logged in status");
+
       setLoaded(AuthLoadStatus.LOADING);
       IsLoggedIn().then(async ([user, err]) => {
         console.assert(!err, err);

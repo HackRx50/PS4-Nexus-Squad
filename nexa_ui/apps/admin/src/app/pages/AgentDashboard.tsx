@@ -37,9 +37,8 @@ const AgentDashboard: React.FC = () => {
         method: 'DELETE',
         agent_name,
       });
-      const data = await response.json();
-      console.log(data);
       if (response.ok) {
+        const data = await response.json();
         const newActions = actions.filter((action) => action.aid !== id);
         dispatch(addActions({ agent_name: agent_name!, actions: newActions }));
 

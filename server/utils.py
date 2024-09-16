@@ -1,3 +1,4 @@
+from os.path import join
 import os
 from pprint import pprint
 
@@ -77,3 +78,31 @@ def checkApiKey(api_key: str):
         return False
     finally:
         session.close()
+
+
+
+def getSubdomain(url: str):
+    domain_parts = url.split(".")
+    if len(domain_parts) == 2 and domain_parts[1].startswith("localhost"):
+        return domain_parts[0]
+    if len(domain_parts) > 2:
+        return ".".join(domain_parts[:-2])
+    else:
+        return "www"
+
+def getSPAContent(subdomain: str, path: str):
+    spa_path = join(BASE_DIR, "deployments", subdomain) 
+    print(spa_path, path)
+    content = None
+    if path == "/":
+        path = "index.html"
+    else:
+        path = path[1:]
+    print(join(spa_path, path), "exists:", os.path.exists(join(spa_path, path)))
+    if os.path.exists(join(spa_path, path)):
+        with open(join(spa_path, path), 'br') as file:
+            content = file.read()
+    else:
+        with open(join(spa_path, "index.html"), 'br') as file:
+            content = file.read()
+    return content

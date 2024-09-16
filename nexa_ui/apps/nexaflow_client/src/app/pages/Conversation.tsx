@@ -1,56 +1,96 @@
-import { useState, KeyboardEvent, useEffect, useRef, ChangeEvent } from 'react';
-import { Button } from '@nexa_ui/shared';
+import { useState, KeyboardEvent, useEffect, useRef } from 'react';
+import { Button, Toaster, useToast } from '@nexa_ui/shared';
 import { Textarea } from '@nexa_ui/shared';
-import { Input } from '@nexa_ui/shared';
 import { Card } from '@nexa_ui/shared';
-import { ArrowRight, Upload, Loader2 } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { ArrowRight, Loader2, Menu, Plus } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useLocation } from 'react-router-dom';
-import { Message } from '../types';
+import { Message, Session } from '../types';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { SessionList } from '../components/SessionList';
+import { appFetch, BASE_URL } from '../utilities';
+import { createId } from '@paralleldrive/cuid2';
+import { addSession, setSessionMessage, setSessionMessages } from '../store';
 
 function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [llmResponseLoading, setLLMResponseLoading] = useState(false);
-  const [convoID, setConvoID] = useState<string | undefined>('');
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [innerWidth, setInnerWidth] = useState(window.innerWidth);
+
+  const accessToken = useAppSelector((state) => state.auth.accessToken);
+  const sessions = useAppSelector((state) => state.sessionsSlice.sessions);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const { toast } = useToast();
 
   const { session_id } = useParams<{ session_id: string }>();
-  const location = useLocation();
 
-  useEffect(() => {
-    const url = location.pathname;
-    setConvoID(url.split('/').pop());
-  }, []);
-
-  const fetchSessionData = async () => {
+  const fetchSessionData = async (session_id: string) => {
     try {
-      const response = await fetch(`/api/v1/chat/${session_id}`, {
+      const response = await appFetch(`/api/v1/chat/${session_id}`, {
         method: 'GET',
+        accessToken: accessToken!,
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': '075823263cf07d51a7d82c8fbb90c92d',
         },
       });
-      const sessionData: { messages: Message[] } = await response.json();
-      console.log('sessionData', sessionData);
-      setMessages(
-        sessionData['messages'].filter(
-          (message) => message.content && message.type !== 'tool'
-        )
-      );
+      if (response.ok) {
+        const sessionData: { messages: Message[] } = await response.json();
+        console.log('Session Data', sessionData);
+        dispatch(
+          setSessionMessages({
+            sessionId: session_id,
+            messages: sessionData['messages'],
+          })
+        );
+      } else {
+        if (response.status === 401) {
+          const errorData = await response.json();
+          toast({
+            title: 'Unauthorized',
+            description: 'Authentication Required!',
+            duration: 3000,
+          });
+          console.log(errorData);
+        }
+      }
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
-    fetchSessionData();
-  }, []);
+    const index = sessions.findIndex((value) => value.cid === session_id);
+    if (index > -1 && session_id) {
+      if (sessions[index].messages)
+        setMessages(
+          sessions[index].messages.filter(
+            (message) => message.type !== 'tool' && message.content != ''
+          )
+        );
+      else fetchSessionData(session_id);
+    }
+  }, [sessions, session_id]);
+
+  useEffect(() => {
+    if (accessToken) {
+    } else {
+      window.location.href = BASE_URL`http://admin.localhost/login?auth=http://${window.location.hostname}/auth&redirect=${window.location.href}`;
+    }
+  }, [accessToken, session_id]);
+
+  useEffect(() => {
+    window.addEventListener("resize", onResize)
+    return () => {
+      window.removeEventListener("resize", onResize)
+    }
+  }, [onResize])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,6 +121,15 @@ function ChatPanel() {
   };
 
   const handleSendMessage = async () => {
+    if (!accessToken) {
+      toast({
+        title: 'Not Authenticated',
+        description: 'You have to login',
+        duration: 3000,
+        variant: 'destructive',
+      });
+      return;
+    }
     if (inputText.trim()) {
       setInputText('');
       setLLMResponseLoading(true);
@@ -99,51 +148,124 @@ function ChatPanel() {
             response_metadata: {},
           },
         ]);
-        const response = await fetch(`/api/v1/chat/${session_id}`, {
+        console.log(userMessage);
+        const response = await appFetch(`/api/v1/chat/${session_id}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': '075823263cf07d51a7d82c8fbb90c92d',
-          },
+          accessToken: accessToken!,
           body: JSON.stringify(userMessage),
         });
         if (response.ok) {
           const data: Message[] = await response.json();
           console.log(data);
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            ...data
-              .slice(1)
-              .filter((message) => message.content && message.type !== 'tool'),
-          ]);
+          data.forEach((message) => {
+            if (message.content && message.type !== 'tool') {
+              dispatch(setSessionMessage({ sessionId: session_id!, message }));
+            }
+          });
         } else {
           console.log(await response.text());
         }
       } catch (error) {
         console.error('Error fetching LLM response:', error);
+        toast({
+          title: 'Error Sending Message',
+          description: 'Error fetching LLM response:' + error,
+          duration: 3000,
+          variant: 'destructive',
+        });
       } finally {
         setLLMResponseLoading(false);
       }
     }
   };
 
+  async function onNewSessionButtonClick() {
+    const newSessionID = createId();
+    const newSessionURL = `/chat/${newSessionID}`;
+    try {
+      const response = await appFetch(`/api/v1/chat/${newSessionID}`, {
+        method: 'GET',
+        accessToken: accessToken!,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const sessionData: Session = await response.json();
+        dispatch(addSession(sessionData));
+      }
+
+      navigate(newSessionURL);
+    } catch (error) {}
+  }
+
+  function onResize() {
+    setInnerWidth(window.innerWidth);
+  }
+
+  function handleShowSideMenu() {
+    setShowSidebar(!showSidebar);
+  }
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <Card className="w-96 border-r hidden md:flex md:flex-col">
-        <div className="flex-1 p-4">
+      <Card
+        className={`border-r md:flex md:flex-col ${
+          innerWidth < 768
+            ? 'fixed top-0 left-0 h-full transition-transform duration-500 ease-in-out'
+            : 'w-96'
+        } ${
+          innerWidth < 768
+            ? showSidebar
+              ? 'translate-x-0 w-full z-50'
+              : '-translate-x-full w-96'
+            : ''
+        }`}
+      >
+        <div className="p-4 flex justify-between items-center">
           <h2 className="text-lg font-semibold">Nexaflow</h2>
-          {/* Add more sidebar elements as needed */}
+          <div className="gap-2 flex">
+            <Button onClick={() => onNewSessionButtonClick()} variant="ghost">
+              <Plus />
+            </Button>
+            <Button
+              onClick={() => handleShowSideMenu()}
+              variant="outline"
+              className="cursor-pointer md:hidden"
+            >
+              <Menu />
+            </Button>
+          </div>
+        </div>
+        <div className="p-4 flex-1 overflow-scroll">
+          <SessionList />
         </div>
       </Card>
 
-      {/* Main chat area */}
       <div className="flex-1 flex flex-col">
+        <div className="p-4 flex justify-between items-center top-0 left-0 w-full z-10  md:hidden">
+          <h2 className="text-lg font-semibold">Nexaflow</h2>
+          <div className="gap-2 flex">
+            <Button onClick={() => onNewSessionButtonClick()} variant="ghost">
+              <Plus />
+            </Button>
+            <Button
+              onClick={() => handleShowSideMenu()}
+              variant="outline"
+              className="cursor-pointer"
+            >
+              <Menu />
+            </Button>
+          </div>
+        </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${message.type === "human" ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${
+                message.type === 'human' ? 'justify-end' : 'justify-start'
+              }`}
             >
               <div
                 className={`max-w-[70%] p-2 rounded-lg ${
@@ -208,6 +330,7 @@ function ChatPanel() {
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

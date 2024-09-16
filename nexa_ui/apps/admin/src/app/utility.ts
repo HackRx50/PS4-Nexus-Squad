@@ -106,7 +106,7 @@ export async function appFetch(url: string, options: RequestInit & { agent_name?
     if (idToken) {    
         defaultHeaders.Authorization =`Nexaflow ${idToken}`;
     }
-    defaultHeaders['x-api-key'] = '075823263cf07d51a7d82c8fbb90c92d';
+    defaultHeaders['x-api-key'] = process.env.APP_API_KEY;
 
     const updatedOptions: RequestInit = {
         ...options,

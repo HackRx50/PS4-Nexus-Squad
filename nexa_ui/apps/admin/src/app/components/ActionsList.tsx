@@ -4,6 +4,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  formatDate,
   Input,
   useToast,
 } from '@nexa_ui/shared';
@@ -74,9 +75,8 @@ const ActionsList: React.FC<ActionsListProps> = ({
         agent_name,
         method: 'DELETE',
       });
-      const data = await response.json();
-      console.log(data);
       if (response.ok) {
+        const data = await response.json();
         const newDocumets = documents.filter(
           (action) => action.did !== data.document_id
         );
@@ -160,7 +160,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
                   <CardContent className="py-2">
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>{action.language}</span>
-                      <span>{action.created_at}</span>
+                      <span>{formatDate(action.created_at)}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -187,7 +187,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
                   </CardHeader>
                   <CardContent className="py-2">
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span className="mt-auto">{document.created_at}</span>
+                      <span className="mt-auto">{formatDate(document.created_at)}</span>
                     </div>
                   </CardContent>
                 </Card>

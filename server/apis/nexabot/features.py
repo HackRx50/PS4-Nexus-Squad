@@ -12,7 +12,7 @@ from sqlalchemy.orm.session import Session
 
 from settings import MISTRAL_MODEL_TYPE
 
-from storage.db import get_session
+from storage.db import get_session, engine
 from storage.models import ChatSession, Action, Agent
 from storage.utils import find_agent_by_id, find_agent_by_name, get_actions_by_agent_name
 
@@ -102,17 +102,18 @@ class SessionManager:
         for session in self.chat_sessions:
             if session_id == session.cid:
                 return session
-        session = ChatSession.get_session_by_id(self.db_session, session_id, user_id)
-        if session:
-            self.chat_sessions.append(session)
-            return session
-        else:
-            agent: Agent = find_agent_by_name(self.db_session, agent_name)
-            if not agent:
-                raise ValueError("Agent Not Found")
-            session = ChatSession.create(agent=agent.agid, cid=session_id, user_id=user_id)
-            self.chat_sessions.append(session)
-            return session
+        with Session(engine) as db_session:
+            session = ChatSession.get_session_by_id(db_session, session_id, user_id)
+            if session:
+                self.chat_sessions.append(session)
+                return session
+            else:
+                agent: Agent = find_agent_by_name(db_session, agent_name)
+                if not agent:
+                    raise ValueError("Agent Not Found")
+                session = ChatSession.create(agent=agent.agid, cid=session_id, user_id=user_id)
+                self.chat_sessions.append(session)
+                return session
 
     def has_nexabot(self, id: str):
         for bot in self.active_bots:
@@ -178,7 +179,6 @@ class SessionManager:
         for message in last_three_response:
             session_messages.append(message)
         return "Test Message", last_three_response
-
 
 
     def save_session(self, session_id: str):

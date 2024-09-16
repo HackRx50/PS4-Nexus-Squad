@@ -19,6 +19,7 @@
     "@uiw/react-textarea-code-editor": "^3.0.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.5",
     "firebase": "^10.13.1",
     "lucide-react": "^0.439.0",
     "react": "18.3.1",
