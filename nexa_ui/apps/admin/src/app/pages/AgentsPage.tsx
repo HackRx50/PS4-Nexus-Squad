@@ -14,6 +14,7 @@ import {
   DialogFooter,
   useToast,
   Toaster,
+  formatDate,
 } from '@nexa_ui/shared';
 
 import { useNavigate } from 'react-router-dom';
@@ -210,7 +211,7 @@ const AgentsPage = () => {
                 </CardContent>
                 <CardContent className='py-0'>
                   <div className="flex justify-end text-xs text-muted-foreground">
-                    <span>{agent.created_at}</span>
+                    <span>{formatDate(agent.created_at)}</span>
                   </div>
                 </CardContent>
               </Card>

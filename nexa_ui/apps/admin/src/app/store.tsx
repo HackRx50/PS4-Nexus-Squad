@@ -89,6 +89,7 @@ export const store = configureStore({
         documentsSlice: documentMetaDataSlice.reducer,
         agentsSlice: agentSlice.reducer
     },
+    devTools: process.env.NODE_ENV === "development"
 })
 
 export type RootState = ReturnType<typeof store.getState>;
