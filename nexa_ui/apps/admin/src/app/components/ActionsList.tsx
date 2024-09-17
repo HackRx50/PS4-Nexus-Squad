@@ -186,7 +186,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
                     </div>
                   </CardHeader>
                   <CardContent className="py-2">
-                    <div className="flex justify-between text-xs text-muted-foreground">
+                    <div className="flex justify-end text-xs text-muted-foreground">
                       <span className="mt-auto">{formatDate(document.created_at)}</span>
                     </div>
                   </CardContent>

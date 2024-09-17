@@ -76,6 +76,7 @@ export const store = configureStore({
     auth: authSlice.reducer,
     sessionsSlice: sessionsSlice.reducer,
   },
+  devTools: process.env.NODE_ENV === "development"
 });
 
 export type RootState = ReturnType<typeof store.getState>;
