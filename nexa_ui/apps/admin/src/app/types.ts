@@ -1,3 +1,5 @@
+import { E_TITLES } from "./constants";
+
 export type Action = {
     aid: string;
     title: string;
@@ -44,4 +46,27 @@ export interface User {
     agents?: Agent[]
     documents?: DocumentMetaData[];
     accessToken?: string
+}
+
+
+export type TUserSliceInitialState = {
+    user: User | null
+}
+
+export type TDocumentMetaDataSliceInitialState = {
+    documentMetaData: Record<string, DocumentMetaData[]>
+}
+
+
+export type TActionSliceInitialState = {
+    actions: Record<string, Action[]>
+}
+
+
+export type TAgentSliceInitialState = {
+    agents: Agent[]
+}
+
+export type TAppTitle = {
+    title: E_TITLES
 }

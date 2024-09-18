@@ -7,7 +7,7 @@ from firebase_admin import credentials, auth
 
 from settings import BASE_DIR
 from storage.models import ApplicationAPIKey
-from storage.db import get_session
+from storage.db import Session, engine
 
 cred = credentials.Certificate(BASE_DIR + "/admin-key.json")
 
@@ -67,17 +67,15 @@ def checkApiKey(api_key: str):
     Returns:
         bool: True if the API key is valid, False otherwise.
     """
-    session = get_session()
-    try:
-        api_key = session.query(ApplicationAPIKey).filter(ApplicationAPIKey.key == api_key).first()
-        if not api_key:
-            raise ValueError("API key is invalid")
-        return True
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return False
-    finally:
-        session.close()
+    with Session(engine) as session:
+        try:
+            api_key = session.query(ApplicationAPIKey).filter(ApplicationAPIKey.key == api_key).first()
+            if not api_key:
+                raise ValueError("API key is invalid")
+            return True
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return False
 
 
 

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../hooks';
 
-export default function SignupPageGuard({
+export default function VerificationPageGuard({
   children,
 }: {
   children: React.ReactNode;
@@ -12,11 +12,10 @@ export default function SignupPageGuard({
 
   useEffect(() => {
     if (user) {
-      if (user.emailVerified) {
+      if (user.emailVerified) 
         navigate('/');
-      } else {
-        navigate("/verify-mail")
-      }
+    } else {
+      navigate("/login")
     }
   }, [user]);
 

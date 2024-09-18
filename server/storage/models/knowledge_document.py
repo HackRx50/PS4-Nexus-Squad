@@ -1,6 +1,5 @@
 from sqlalchemy import func
 from sqlalchemy import Column, String, TIMESTAMP, ForeignKey, JSON
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 import cuid
@@ -8,7 +7,7 @@ import cuid
 from .base import Base
 from .agent import Agent
 
-from storage.db import get_session
+from storage.db import engine, Session
 
 class KnowledgeDocument(Base):
     __tablename__ = "knowledge_document"
@@ -51,37 +50,35 @@ class KnowledgeDocument(Base):
         )
     
     @classmethod
-    def delete_by_id(cls, session, document_id):
-        try:
-            document = session.query(KnowledgeDocument).filter(KnowledgeDocument.did == document_id).first()
-            if document:
-                session.delete(document)
-                session.commit()
-                return True
-            else:
+    def delete_by_id(cls, document_id: str):
+        with Session(engine) as session:
+            try:
+                document = session.query(KnowledgeDocument).filter(KnowledgeDocument.did == document_id).first()
+                if document:
+                    session.delete(document)
+                    session.commit()
+                    return True
+                else:
+                    return False
+            except SQLAlchemyError as e:
+                session.rollback()  # Roll back the session in case of error
+                # Log the error or handle it as needed
+                print(f"An error occurred: {e}")
                 return False
-        except SQLAlchemyError as e:
-            session.rollback()  # Roll back the session in case of error
-            # Log the error or handle it as needed
-            print(f"An error occurred: {e}")
-            return False
 
     @classmethod
     def create(cls, name, type, agent_id, ids, owner_id=None):
-        session = get_session()  # Open session
-
-        try:
-            document = KnowledgeDocument()
-            document.name = name
-            document.type = type
-            document.agent = agent_id
-            document.vector_ids = ids
-            session.add(document)
-            session.commit()
-            session.refresh(document)
-            return document
-        except Exception as e:
-            session.rollback()
-            raise e
-        finally:
-            session.close()
+        with Session(engine) as session:
+            try:
+                document = KnowledgeDocument()
+                document.name = name
+                document.type = type
+                document.agent = agent_id
+                document.vector_ids = ids
+                session.add(document)
+                session.commit()
+                session.refresh(document)
+                return document
+            except Exception as e:
+                session.rollback()
+                raise e

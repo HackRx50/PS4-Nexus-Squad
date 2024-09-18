@@ -45,6 +45,14 @@ const sessionsSlice = createSlice({
         (value) => value.cid !== action.payload
       );
     },
+    setSessionTitle(state, action: PayloadAction<{sessionId: string, title: string}>) {
+      const index = state.sessions.findIndex(
+        (value) => action.payload.sessionId === value.cid
+      );
+      if (index > -1) {
+        state.sessions[index].title = "" + action.payload.title
+      }
+    }
   },
 });
 
@@ -69,6 +77,7 @@ export const {
   removeSession,
   setSessionMessage,
   setSessionMessages,
+  setSessionTitle
 } = sessionsSlice.actions;
 
 export const store = configureStore({

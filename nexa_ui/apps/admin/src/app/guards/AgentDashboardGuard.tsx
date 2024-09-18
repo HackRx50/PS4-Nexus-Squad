@@ -15,11 +15,12 @@ export default function AgentDashBoardGurad({ children }: { children: React.Reac
 
   useEffect(() => {
     if (agent_name == "") {
-        navigate("/agents")
+      navigate("/agents")
     }
   }, [agent_name])
 
   useEffect(() => {
+    console.log(user)
     if (loaded === AuthLoadStatus.IDLE && !user) {
       return;
     }
@@ -28,6 +29,10 @@ export default function AgentDashBoardGurad({ children }: { children: React.Reac
     }
     if (!user) {
       navigate('/login');
+      return;
+    }
+    if (user && !user.emailVerified){
+      navigate("/verify-email")
       return;
     }
   }, [user, loaded, navigate]);

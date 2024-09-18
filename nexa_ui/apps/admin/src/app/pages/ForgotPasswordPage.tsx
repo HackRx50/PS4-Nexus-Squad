@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Input, Card, CardContent, CardHeader, useToast, Toaster } from '@nexa_ui/shared';
 import SignupPageGuard from '../guards/SignupPageGuard';
 import { Link } from 'react-router-dom';
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from '../firebase.config';
 import Loading from '../components/Loading';
+import { useAppDispatch } from '../hooks';
+import { setAppTitle } from '../store';
+import { E_TITLES } from '../constants';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [formSubmissionLoading, setFormSubmissionLoading] = useState(false);
   const { toast } = useToast();
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(setAppTitle(E_TITLES.FORGOT_PAGE_TITLE))
+  }, [])
 
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {

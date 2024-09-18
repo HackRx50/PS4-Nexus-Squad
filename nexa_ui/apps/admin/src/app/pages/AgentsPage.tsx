@@ -19,11 +19,12 @@ import {
 
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../hooks';
-import { setAgents } from '../store';
+import { setAgents, setAppTitle } from '../store';
 import { useDispatch } from 'react-redux';
 import { PlusIcon, MessageCircle, Settings } from 'lucide-react';
 import { appFetch, BASE_URL, getAgents } from '../utility';
 import AgentDashBoardGurad from '../guards/AgentDashboardGuard';
+import { E_TITLES } from '../constants';
 
 type Agent = {
   owner: string;
@@ -40,6 +41,10 @@ function AgentCreatePopup() {
   const [submitCount, setSubmitCount] = useState(0);
   const { toast } = useToast();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setAppTitle(E_TITLES.AGENTS_PAGE_TITLE))
+  }, [])
 
   useEffect(() => {
     if (submitCount > 0) {

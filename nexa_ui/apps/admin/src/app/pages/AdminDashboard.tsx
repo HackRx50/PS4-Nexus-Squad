@@ -5,14 +5,15 @@ import ActionsForm from '../components/ActionsForm';
 import ActionsList from '../components/ActionsList';
 import { Action, DocumentMetaData } from '../types';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { addActions, addDocumentMetaData } from '../store';
+import { addActions, addDocumentMetaData, setAppTitle } from '../store';
 import { useNavigate, useParams } from 'react-router-dom';
 import { appFetch, getActions, getDocuments } from '../utility';
 import AgentDashBoardGurad from '../guards/AgentDashboardGuard';
+import { E_TITLES } from '../constants';
 
 type ToggleOption = 'action' | 'documents';
 
-const AgentDashboard: React.FC = () => {
+const AdminDashboard: React.FC = () => {
   // action maker
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('python');
@@ -30,6 +31,10 @@ const AgentDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    dispatch(setAppTitle(E_TITLES.DASHBOARD_PAGE_TITLE))
+  }, [])
 
   const handleDeleteAction = async (id: string) => {
     try {
@@ -117,4 +122,4 @@ const AgentDashboard: React.FC = () => {
   );
 };
 
-export default AgentDashboard;
+export default AdminDashboard;

@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Input, Card, CardContent, CardHeader } from '@nexa_ui/shared';
 import { loginWithEmail, useAuth } from '../contexts/AuthContext';
 import { getUserFromDB } from '../utility';
 import LoginPageGuard from '../guards/LoggedInGuard';
 import { Link } from 'react-router-dom'; // Add this import
 import Loading from '../components/Loading';
+import { useAppDispatch } from '../hooks';
+import { setAppTitle } from '../store';
+import { E_TITLES } from '../constants';
 
 const LoginPage = () => {
   const [formSubmissionLoading, setFormSubmissionLoading] = useState(false);
@@ -14,6 +17,12 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(setAppTitle(E_TITLES.LOGIN_PAGE_TITLE))
+  }, [])
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();

@@ -8,11 +8,9 @@ from langchain_mistralai.chat_models import ChatMistralAI
 
 from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
 
-from sqlalchemy.orm.session import Session
-
 from settings import MISTRAL_MODEL_TYPE
 
-from storage.db import get_session, engine
+from storage.db import Session, engine
 from storage.models import ChatSession, Action, Agent
 from storage.utils import find_agent_by_id, find_agent_by_name, get_actions_by_agent_name
 
@@ -28,7 +26,6 @@ def get_vector_tool(agent_name: str):
         return vector_store.similarity_search(query)
     
     return search_vector_store
-
 
 
 class NexaBot:
@@ -93,7 +90,6 @@ class SessionManager:
 
     sessions_messages = {}
 
-    db_session = get_session()
 
     def __init__(self, llm=None) -> None:
         self.llm = llm
@@ -108,7 +104,7 @@ class SessionManager:
                 self.chat_sessions.append(session)
                 return session
             else:
-                agent: Agent = find_agent_by_name(db_session, agent_name)
+                agent = find_agent_by_name(db_session, agent_name)
                 if not agent:
                     raise ValueError("Agent Not Found")
                 session = ChatSession.create(agent=agent.agid, cid=session_id, user_id=user_id)
@@ -130,28 +126,30 @@ class SessionManager:
         for bot in self.active_bots:
             if bot.id == session.agent:
                 return bot
-        nexabot = NexaBot.create(self.db_session, session.agent, self.llm)
-        if nexabot:
-            self.active_bots.append(nexabot)
-        return nexabot
+        with Session(engine) as db_session:
+            nexabot = NexaBot.create(db_session, session.agent, self.llm)
+            if nexabot:
+                self.active_bots.append(nexabot)
+            return nexabot
     
 
     def interact_cli(self, session_id: str, agent_name: str):
-        session, nexabot = self.handle_session(session_id, agent_name)
-        query = input("> ")
-        while query != "exit":
-            if not query.strip():
-                query = input("> ")
-                continue
-            message, result  =self.talk(session, nexabot, query)
-            print(message)
+        with Session(engine) as db_session:
+            session, nexabot = self.handle_session(session_id, agent_name)
             query = input("> ")
-        try:
-            self.save_session(session_id)
-            print(f"Saving session: {session_id}")
-        except Exception as e:
-            print("Couldn't Save the session")
-            self.db_session.rollback()
+            while query != "exit":
+                if not query.strip():
+                    query = input("> ")
+                    continue
+                message, result  =self.talk(session, nexabot, query)
+                print(message)
+                query = input("> ")
+            try:
+                self.save_session(session_id)
+                print(f"Saving session: {session_id}")
+            except Exception as e:
+                print("Couldn't Save the session")
+                self.db_session.rollback()
 
 
     def talk(self, session: ChatSession, nexabot: NexaBot, message: str):
@@ -182,18 +180,19 @@ class SessionManager:
 
 
     def save_session(self, session_id: str):
-        try:
-            chat_session = self.db_session.query(ChatSession).filter(ChatSession.cid == session_id).first()
-            if session_id in self.sessions_messages:
-                if chat_session:
-                    chat_session.messages = self.transpile_session_messages(session_id)
-                    self.db_session.commit()
-                else:
-                    print(f"Session with id {session_id} not found in the database.")
-        except Exception as e:
-            print(e)
-            self.db_session.rollback()
-            print(f"Couldn't save session with id {session_id}")
+        with Session(engine) as db_session:
+            try:
+                chat_session = db_session.query(ChatSession).filter(ChatSession.cid == session_id).first()
+                if session_id in self.sessions_messages:
+                    if chat_session:
+                        chat_session.messages = self.transpile_session_messages(session_id)
+                        db_session.commit()
+                    else:
+                        print(f"Session with id {session_id} not found in the database.")
+            except Exception as e:
+                print(e)
+                db_session.rollback()
+                print(f"Couldn't save session with id {session_id}")
 
 
     def transpile_session_messages(self, session_id: str):
