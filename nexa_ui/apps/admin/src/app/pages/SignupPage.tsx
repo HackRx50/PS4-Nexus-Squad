@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { Button, Input, Card, CardContent, CardHeader } from '@nexa_ui/shared';
+import React, { useEffect, useState } from 'react';
+import { Button, Input, Card, CardContent, CardHeader, Toaster, useToast } from '@nexa_ui/shared';
 import { signupWithEmail, useAuth } from '../contexts/AuthContext';
 import { addUserDetails } from '../utility';
 import SignupPageGuard from '../guards/SignupPageGuard';
 import { Link } from 'react-router-dom'; // Add this import
 import Loading from '../components/Loading';
+import { sendEmailVerification } from 'firebase/auth';
+import { useAppDispatch } from '../hooks';
+import { setAppTitle, setUser } from '../store';
+import { E_TITLES } from '../constants';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -12,9 +16,15 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-
+  const { toasts } = useToast();
   const { setCurrentUser } = useAuth();
   const [formSubmissionLoading, setFormSubmissionLoading] = useState(false);
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(setAppTitle(E_TITLES.SIGNUP_PAGE_TITLE))
+  }, [])
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
@@ -30,6 +40,19 @@ const SignupPage = () => {
         isAnonymous: credential.user.isAnonymous,
       });
       setCurrentUser!(user);
+      toasts.push({
+        id: "signup",
+        title: "User Signup successfull",
+        duration: 3000
+      })
+      if (credential.user) {
+        await sendEmailVerification(credential.user);
+        toasts.push({
+          id: "emailVerification",
+          title: "Verification email has been sent!",
+          duration: 3000
+        })
+      }
       setFormSubmissionLoading(false);
     } catch (err) {
       console.log(err);
@@ -42,10 +65,6 @@ const SignupPage = () => {
       {formSubmissionLoading ? <Loading message="" /> : ''}
 
       <div className="flex items-center justify-center min-h-screen">
-        {/* <div
-        className="flex items-center justify-center min-h-screen"
-        style={{ backgroundColor: 'rgb(14, 14, 15)' }}
-      > */}
         <Card className="w-full max-w-md">
           <CardHeader>
             <h2 className="scroll-m-20 text-sm font-semibold tracking-tight">
@@ -110,6 +129,7 @@ const SignupPage = () => {
           </CardContent>
         </Card>
       </div>
+      <Toaster />
     </SignupPageGuard>
   );
 };

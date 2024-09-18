@@ -3,6 +3,8 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { appFetch, getSessions } from '../utilities';
 import { removeSession, setSessions } from '../store';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+
 import {
   Button,
   Card,
@@ -89,7 +91,9 @@ export function SessionList() {
                 key={session.cid}
               >
                 <CardTitle className={`text-sm font-medium break-all`}>
-                  {session.title || session.cid}
+                <ReactMarkdown>
+                    {session.title || session.cid}
+                </ReactMarkdown>
                 </CardTitle>
               </Link>
 

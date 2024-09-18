@@ -6,7 +6,7 @@ from mimetypes import guess_type
 from os.path import join
 import os
 
-from storage.db import get_session
+from storage.db import Session, engine
 from storage.utils import find_agent_by_name
 from settings import BASE_DIR
 
@@ -18,15 +18,14 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
     agents_cache = []
 
     def isAgentExists(self, name: str):
-        if name not in self.agents_cache:
-            session = get_session()
-            agent = find_agent_by_name(session, name)
-            session.close()
-            if agent:
-                self.agents_cache.append(agent.name)
-                return True
-            else:
-                return False
+        with Session(engine) as session:
+            if name not in self.agents_cache:
+                agent = find_agent_by_name(session, name)
+                if agent:
+                    self.agents_cache.append(agent.name)
+                    return True
+                else:
+                    return False
         return True
 
     async def dispatch(self, request: Request, call_next):
@@ -46,7 +45,7 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         
         # Check API Key
-        if path.startswith("/api"):
+        if path.startswith("/api") and not host.startswith("test.localhost"):
             api_key = request.headers.get("x-api-key")
             try:
                 if api_key:

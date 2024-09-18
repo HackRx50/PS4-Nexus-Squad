@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import Column, String, TIMESTAMP, ForeignKey
 import cuid
 
-from storage.db import get_session
+from storage.db import engine
+
 from .base import Base
 
 
@@ -61,12 +62,11 @@ class Action(Base):
         agent_id: str,
         owner_id: str = None,
     ):
-        session = get_session()
-        action = Action(
-            title, function_name, description, code, language, agent_id, owner_id
-        )
-        session.add(action)
-        session.commit()
-        session.close()
-        return action
+        with Session(engine) as session:
+            action = Action(
+                title, function_name, description, code, language, agent_id, owner_id
+            )
+            session.add(action)
+            session.commit()
+            return action
 

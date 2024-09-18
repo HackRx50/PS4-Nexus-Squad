@@ -11,7 +11,7 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { SessionList } from '../components/SessionList';
 import { appFetch, BASE_URL } from '../utilities';
 import { createId } from '@paralleldrive/cuid2';
-import { addSession, setSessionMessage, setSessionMessages } from '../store';
+import { addSession, setSessionMessage, setSessionMessages, setSessionTitle } from '../store';
 
 function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -29,7 +29,7 @@ function ChatPanel() {
 
   const { toast } = useToast();
 
-  const { session_id } = useParams<{ session_id: string }>();
+  let { session_id } = useParams<{ session_id: string }>();
 
   const fetchSessionData = async (session_id: string) => {
     try {
@@ -86,11 +86,11 @@ function ChatPanel() {
   }, [accessToken, session_id]);
 
   useEffect(() => {
-    window.addEventListener("resize", onResize)
+    window.addEventListener('resize', onResize);
     return () => {
-      window.removeEventListener("resize", onResize)
-    }
-  }, [onResize])
+      window.removeEventListener('resize', onResize);
+    };
+  }, [onResize]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -130,6 +130,14 @@ function ChatPanel() {
       });
       return;
     }
+
+    if (!session_id) {
+      const newSessionID = createId();
+      await createNewSession(newSessionID, inputText);
+      session_id = newSessionID;
+    }
+
+
     if (inputText.trim()) {
       setInputText('');
       setLLMResponseLoading(true);
@@ -148,7 +156,10 @@ function ChatPanel() {
             response_metadata: {},
           },
         ]);
-        console.log(userMessage);
+        if (messages.length < 2) {
+          getTitle(session_id, inputText.trim())
+          .then().catch((err) => console.log(err));
+        }
         const response = await appFetch(`/api/v1/chat/${session_id}`, {
           method: 'POST',
           accessToken: accessToken!,
@@ -156,7 +167,6 @@ function ChatPanel() {
         });
         if (response.ok) {
           const data: Message[] = await response.json();
-          console.log(data);
           data.forEach((message) => {
             if (message.content && message.type !== 'tool') {
               dispatch(setSessionMessage({ sessionId: session_id!, message }));
@@ -179,8 +189,36 @@ function ChatPanel() {
     }
   };
 
-  async function onNewSessionButtonClick() {
-    const newSessionID = createId();
+  async function getTitle(sessionID: string, query: string) {
+    const data = { query };
+    try {
+      const response = await appFetch(`http://clock.localhost:8000/api/v1/chat/new/${sessionID}`, {
+        method: 'POST',
+        accessToken: accessToken!,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let responseData = '';
+      if (response.ok) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const decodedValue = decoder.decode(value);
+          responseData += decodedValue;
+          dispatch(setSessionTitle({ sessionId: sessionID, title: responseData}));
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  async function createNewSession(newSessionID: string, query: string = '') {
     const newSessionURL = `/chat/${newSessionID}`;
     try {
       const response = await appFetch(`/api/v1/chat/${newSessionID}`, {
@@ -188,15 +226,23 @@ function ChatPanel() {
         accessToken: accessToken!,
         headers: {
           'Content-Type': 'application/json',
-        },
+        }
       });
       if (response.ok) {
         const sessionData: Session = await response.json();
         dispatch(addSession(sessionData));
       }
-
+      if (query) {
+        await getTitle(newSessionID, query);
+      }
       navigate(newSessionURL);
+      return newSessionID;
     } catch (error) {}
+  }
+
+  async function onNewSessionButtonClick() {
+    const newSessionID = createId();
+    await createNewSession(newSessionID);
   }
 
   function onResize() {

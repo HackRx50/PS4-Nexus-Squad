@@ -1,9 +1,23 @@
 import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Action, DocumentMetaData, User, Agent } from "./types";
+import { Action, DocumentMetaData, User, Agent, TUserSliceInitialState, TDocumentMetaDataSliceInitialState, TActionSliceInitialState, TAgentSliceInitialState, TAppTitle } from "./types";
+import { E_TITLES } from "./constants";
 
-type TUserSliceInitialState = {
-    user: User | null
+
+
+const appTitlInitialState: TAppTitle ={
+    title: E_TITLES.AGENTS_PAGE_TITLE
 }
+
+export const appTitleSlice = createSlice({
+    initialState: appTitlInitialState,
+    name: "appTitle",
+    reducers: {
+        setAppTitle(state, action: PayloadAction<E_TITLES>) {
+            state.title = action.payload;
+        }
+    }
+})
+
 
 const userSliceInitialState: TUserSliceInitialState = {
     user: null
@@ -19,10 +33,6 @@ export const userSlice = createSlice({
     }
 });
 
-type TDocumentMetaDataSliceInitialState = {
-    documentMetaData: Record<string, DocumentMetaData[]>
-}
-
 const documentMetaDataSliceInitialState: TDocumentMetaDataSliceInitialState = {
     documentMetaData: {}
 }
@@ -37,9 +47,6 @@ export const documentMetaDataSlice = createSlice({
     }
 });
 
-type TActionSliceInitialState = {
-    actions: Record<string, Action[]>
-}
 
 const actionSliceInitialState: TActionSliceInitialState = {
     actions: {}
@@ -54,11 +61,6 @@ export const actionSlice = createSlice({
         }
     }
 });
-
-
-type TAgentSliceInitialState = {
-    agents: Agent[]
-}
 
 const agentSliceInitialState: TAgentSliceInitialState = {
     agents: []
@@ -81,13 +83,15 @@ export const { setUser } = userSlice.actions;
 export const { addActions } = actionSlice.actions;
 export const { addDocumentMetaData } = documentMetaDataSlice.actions;
 export const { setAgents, clearActions } = agentSlice.actions;
+export const { setAppTitle } = appTitleSlice.actions;
 
 export const store = configureStore({
     reducer: {
         userReducer: userSlice.reducer,
         actionsSlice: actionSlice.reducer,
         documentsSlice: documentMetaDataSlice.reducer,
-        agentsSlice: agentSlice.reducer
+        agentsSlice: agentSlice.reducer,
+        appTitleSlice: appTitleSlice.reducer
     },
     devTools: process.env.NODE_ENV === "development"
 })

@@ -404,7 +404,7 @@ function ActionsForm({
           <CardContent className="flex-grow flex flex-col overflow-hidden">
             <div className="mb-4 flex-shrink-0 flex items-end space-x-4">
               <div className="flex-grow">
-                <Label htmlFor="action-title">Action Title</Label>
+                <Label className='' htmlFor="action-title">Action Title</Label>
                 <Input
                   id="action-title"
                   value={actionTitle}
@@ -413,7 +413,7 @@ function ActionsForm({
                 />
               </div>
               <div className="w-1/3">
-                <Label htmlFor="language-select">Language</Label>
+                <Label className='' htmlFor="language-select">Language</Label>
                 <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger id="language-select">
                     <SelectValue placeholder="Select language" />
@@ -426,7 +426,7 @@ function ActionsForm({
               </div>
             </div>
             <div className="mb-4 flex-shrink-0">
-              <Label htmlFor="requirements">
+              <Label className='' htmlFor="requirements">
                 Requirements (comma-separated)
               </Label>
               <Input

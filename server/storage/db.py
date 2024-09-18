@@ -20,7 +20,3 @@ engine = create_engine(
     max_overflow=20,             
     pool_timeout=30,
 )
-
-def get_session():
-    session = Session(bind=engine)
-    return session

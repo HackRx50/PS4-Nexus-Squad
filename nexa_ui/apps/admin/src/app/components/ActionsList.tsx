@@ -109,8 +109,8 @@ const ActionsList: React.FC<ActionsListProps> = ({
   return (
     <Card className="w-1/3 mr-4 flex flex-col">
       <CardHeader className="flex flex-col space-y-1.5">
-        <CardTitle className="text-2xl font-bold pb-4">
-          Nexaflow: admin
+        <CardTitle className="text-2xl font-bold pb-4 capitalize">
+          Nexaflow: {agent_name}
         </CardTitle>
         {/* <p className="text-sm font-medium text-muted-foreground">
         Previous Actions
