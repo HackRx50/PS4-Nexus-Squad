@@ -11,7 +11,8 @@ const AgentsPage = lazy(() => import('./pages/AgentsPage'));
 import { AuthProvider } from './contexts/AuthContext';
 import Loading from './components/Loading';
 import AppTitle from './components/AppTitle';
-const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
+import AuthActionPage from './pages/AuthActionPage';
+const SendVerifyEmailPage = lazy(() => import('./pages/SendVerifyEmailPage'));
 
 function App() {
   return (
@@ -28,7 +29,8 @@ function App() {
                   path="/forgot-password"
                   element={<ForgotPasswordPage />}
                 />
-                <Route path="/verify-email" element={<VerifyEmailPage />} />
+                <Route path="/auth/action" element={<AuthActionPage />} />
+                <Route path="/verify-email" element={<SendVerifyEmailPage />} />
                 <Route path="/agents" element={<AgentsPage />} />
                 <Route
                   path="/agents/:agent_name"
