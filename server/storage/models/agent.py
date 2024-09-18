@@ -16,6 +16,7 @@ class Agent(Base):
     owner = Column(
         "owner", String, default="cm0xu8fn70001nlpclah1myy9"
     )
+    description = Column("description", String)
     created_at = Column("created_at", TIMESTAMP, server_default=func.now())
     updated_at = Column("updated_at", TIMESTAMP, server_default=func.now(), onupdate=func.now())
     allowed_users = Column("allowed_users", JSON, nullable=True, default=list)

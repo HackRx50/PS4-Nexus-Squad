@@ -15,3 +15,4 @@ PINECONE_INDEX_NAME="nexaflow-test-index"
 
 MISTRAL_MODEL_TYPE="mistral-small-2402"
 
+ENVIRONMENT=os.getenv("ENVIRONMENT") or "development"

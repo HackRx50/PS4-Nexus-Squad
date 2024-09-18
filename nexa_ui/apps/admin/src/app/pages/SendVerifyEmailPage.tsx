@@ -7,7 +7,7 @@ import {
   useToast,
   Toaster,
 } from '@nexa_ui/shared';
-import { sendEmailVerification, sendPasswordResetEmail } from 'firebase/auth';
+import { sendEmailVerification } from 'firebase/auth';
 import { auth } from '../firebase.config';
 import { Loader2 } from 'lucide-react';
 import VerificationPageGuard from '../guards/VerificationPageGuard';
@@ -15,7 +15,7 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { setAppTitle } from '../store';
 import { E_TITLES } from '../constants';
 
-const VerifyEmailPage = () => {
+const SendVerifyEmailPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [emailSentLoading, setEmailSentLoading] = useState(false);
   const { toast } = useToast();
@@ -68,7 +68,7 @@ const VerifyEmailPage = () => {
               Nexaflow
             </h2>
             <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
-              Verify Email
+              Send Verification Email
             </h4>
           </CardHeader>
           <CardContent>
@@ -102,4 +102,4 @@ const VerifyEmailPage = () => {
   );
 };
 
-export default VerifyEmailPage;
+export default SendVerifyEmailPage;
