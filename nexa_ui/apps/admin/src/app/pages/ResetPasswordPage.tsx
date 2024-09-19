@@ -12,10 +12,11 @@ import { Link } from 'react-router-dom';
 import Loading from '../components/Loading';
 import { useAppDispatch } from '../hooks';
 import { setAppTitle } from '../store';
-import { E_TITLES, PASSWORD_RESET_REDIRECT_URL } from '../constants';
+import { E_TITLES, PASSWORD_RESET_REDIRECT_URL, TOAST_MESSAGES } from '../constants';
 
 import { confirmPasswordReset } from 'firebase/auth';
 import { auth } from '../firebase.config';
+
 
 const ResetPasswordPage = ({ oobCode }: { oobCode: string }) => {
   const [password, setPassword] = useState('');
@@ -39,8 +40,8 @@ const ResetPasswordPage = ({ oobCode }: { oobCode: string }) => {
         await confirmPasswordReset(auth, oobCode, password);
       }
       toasts.push({
-        id: 'Reset Successfull',
-        title: 'Password Reset successfull',
+        id: 'Reset Successful',
+        title: TOAST_MESSAGES.RESET_SUCCESS.title,
         duration: 3000,
       });
 
@@ -50,10 +51,10 @@ const ResetPasswordPage = ({ oobCode }: { oobCode: string }) => {
       setFormSubmissionLoading(false);
     } catch (err) {
       toasts.push({
-        id: 'Error Resetting Passwoer',
-        title: 'Password Reset Unsuccessfull',
+        id: 'Error Resetting Password',
+        title: TOAST_MESSAGES.ERROR_RESETTING_PASSWORD.title,
         duration: 3000,
-        variant: "destructive"
+        variant: "destructive",
       });
 
       console.log(err);

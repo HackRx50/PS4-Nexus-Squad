@@ -42,7 +42,6 @@ function ChatPanel() {
       });
       if (response.ok) {
         const sessionData: { messages: Message[] } = await response.json();
-        console.log('Session Data', sessionData);
         dispatch(
           setSessionMessages({
             sessionId: session_id,

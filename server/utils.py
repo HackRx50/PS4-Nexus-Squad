@@ -1,13 +1,14 @@
 from os.path import join
 import os
 from pprint import pprint
-
 import firebase_admin
 from firebase_admin import credentials, auth
+from fastapi import HTTPException
 
 from settings import BASE_DIR
-from storage.models import ApplicationAPIKey
+from storage.models import ApplicationAPIKey, UserAPIKey, User
 from storage.db import Session, engine
+from storage.utils import find_agent_by_id
 
 cred = credentials.Certificate(BASE_DIR + "/admin-key.json")
 
@@ -46,12 +47,18 @@ def authenticate_with_token(authorization_string: str):
             print("Invalid bearer")
             return None
         decoded_token = auth.verify_id_token(token)
-        return TokenVerificationResult(decoded_token)
-    except auth.InvalidIdTokenError:
-        print("Invalid token")
-        return None
+        result = TokenVerificationResult(decoded_token)
+        user = User.find_by_uid(uid=result.uid)
+        if not user:
+            user = User.create(result.uid, email=result.email,emailVerified=result.email_verified)
+        elif user.emailVerified != result.email_verified:
+            User.setEmailVerified(user.uid, result.email_verified)
+        return result
     except auth.ExpiredIdTokenError:
         print("Token has expired")
+        return None
+    except auth.InvalidIdTokenError:
+        print("Invalid token")
         return None
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -78,6 +85,22 @@ def checkApiKey(api_key: str):
             return False
 
 
+
+def checkUserAPIKey(apikey: str, agent_name: str):
+    with Session(engine) as session:
+        api_key = session.query(UserAPIKey).filter(UserAPIKey.key == apikey).first()
+        if api_key:
+            agent = find_agent_by_id(api_key.agent)
+            if not agent:
+                raise HTTPException(status_code=404, detail={"detail": "Nexabot Not Found"})
+            elif agent.name != agent_name:
+                raise HTTPException(status_code=403, detail={"detail": "Nexabot Unavailable"})          
+            limitsAvailable = User.check_limits(api_key.user_id)
+            if limitsAvailable:
+                return api_key.user_id
+            raise HTTPException(status_code=403, detail={"detail": "Limit Exceed"})
+        else:
+            raise HTTPException(status_code=404, detail={"detail": "API key not found"})
 
 def getSubdomain(url: str):
     domain_parts = url.split(".")

@@ -19,4 +19,3 @@ def is_used_by_other(name: str):
 
 def canUseName(name: str):
     return is_valid_subdomain(name) and not is_used_by_other(name)
-

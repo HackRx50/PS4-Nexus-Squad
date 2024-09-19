@@ -8,6 +8,7 @@ import Loading from '../components/Loading';
 import { useAppDispatch } from '../hooks';
 import { setAppTitle } from '../store';
 import { E_TITLES } from '../constants';
+import { TOAST_MESSAGES } from '../constants'; // Add this import
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
@@ -31,14 +32,14 @@ const ForgotPasswordPage = () => {
         setFormSubmissionLoading(false);
       }
       toast({ 
-        title: "Mail Sent",
-        description: "Reset link has been sent on the registered mail.",
+        title: TOAST_MESSAGES.RESET_SUCCESS.title, // Update this line
+        description: TOAST_MESSAGES.RESET_SUCCESS.description || "Reset link has been sent on the registered mail.", // Update this line
         duration: 3000,
         type: 'background',
       })
     } catch(error) {
       toast({ 
-        title: "Error Sending Mail",
+        title: TOAST_MESSAGES.ERROR_SENDING_MAIL.title, // Update this line
         description: (error as any),
         duration: 3000,
         variant: "destructive"

@@ -1,6 +1,6 @@
 from typing import List
-from sqlalchemy.orm.session import Session
 
+from .db import engine, Session
 from .models import User, AccessLevel, Agent, Action
 
 
@@ -14,9 +14,10 @@ def find_agent_by_name(session: Session, name: str)->Agent | None:
     return session.query(Agent).filter(Agent.name==name).first()
 
 
-def find_agent_by_id(session: Session, id: str) -> Agent | None:
+def find_agent_by_id(agid: str) -> Agent | None:
     """Function to find an agent by name."""
-    return session.query(Agent).filter_by(agid=id).first()
+    with Session(engine) as session:
+        return session.query(Agent).filter_by(agid=agid).first()
 
 
 def find_agents_by_user(session: Session, user_id: str)->List[Agent]:
@@ -29,6 +30,7 @@ def get_actions_by_agent_name(session: Session, agent_name: str):
         session.query(Action)
         .join(Agent, Action.agent == Agent.agid)
         .filter(Agent.name == agent_name)
+        .order_by(Action.created_at.desc())
         .all()
     )
 

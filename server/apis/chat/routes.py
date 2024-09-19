@@ -1,13 +1,13 @@
 import atexit
 import json
-import requests
+import os
 
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import StreamingResponse
 import httpx
 
 from apis.chat_session import session_manager
-from storage.models import ChatSession
+from storage.models import ChatSession, User, UserAPIKey
 from storage.db import Session, engine
 from storage.utils import find_agent_by_name
 
@@ -25,12 +25,14 @@ async def generate_text(session_id: str, request: Request):
     async def stream_generator():
         title = ""
         try:
-            url = 'http://localhost:11434/api/generate'
+            url = os.getenv("GENERATE_TITLE_URL")
+
             data = {
                 "model": "gemma2:2b",
                 "stream": True,
                 "prompt": f"Write the one line title for the query which matches the statement by reading which user can understand what can the title detail about: {statement}"
             }
+            
             async with httpx.AsyncClient() as client:
                 async with client.stream('POST', url, json=data) as response:
                     response.raise_for_status()
@@ -105,16 +107,19 @@ async def talk_session(session_id: str, request: Request):
         data = await request.json()
         if hasattr(request.state, "user_id"):
             user_id = request.state.user_id
-
+        if hasattr(request.state, "userKey"):
+            userKey = request.state.userKey
+            UserAPIKey.increase_use_count(user_id, userKey)
         session, nexabot = session_manager.handle_session(
             session_id, agent_name, user_id=user_id
         )
         ai_message, response = session_manager.talk(session, nexabot, data["query"])
         result = [message.__dict__ for message in response]
         session_manager.save_session(session.cid)
+        User.decrease_available_limit(user_id)
         return result
     except:
-        raise HTTPException(status_code=404, detail="Something Went wrong")
+        raise HTTPException(status_code=500, detail="Something Went wrong")
 
 
 @chat_router.delete("/{session_id}")

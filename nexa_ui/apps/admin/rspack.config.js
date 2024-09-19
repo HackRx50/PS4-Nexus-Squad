@@ -17,7 +17,8 @@ const withEnv = (config) => {
       'process.env.FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.FIREBASE_STORAGE_BUCKET),
       'process.env.FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.FIREBASE_MESSAGING_SENDER_ID),
       'process.env.FIREBASE_APP_ID': JSON.stringify(process.env.FIREBASE_APP_ID),
-      'process.env.APP_API_KEY': JSON.stringify(process.env.APP_API_KEY)
+      'process.env.APP_API_KEY': JSON.stringify(process.env.APP_API_KEY),
+      'process.env.SECRET_KEY': JSON.stringify(process.env.SECRET_KEY)
     })
   );
   return config;

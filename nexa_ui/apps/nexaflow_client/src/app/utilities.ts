@@ -48,3 +48,4 @@ export async function appFetch(url: string, options: RequestInit & { agent_name?
     }
     return fetch(url, updatedOptions);
 }
+

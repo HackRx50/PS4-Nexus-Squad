@@ -59,10 +59,7 @@ const ALLOWED_PACKAGES = [
   'pytorch',
   'scipy',
   'nltk',
-  'opencv-python',
   'sqlalchemy',
-  'flask',
-  'django',
 ];
 
 const supportedExtensions = [
@@ -160,10 +157,6 @@ function ActionsForm({
     });
     return invalid.length === 0;
   };
-
-  function setInvalidPackages(invalid: string[]) {
-    throw new Error('Function not implemented.');
-  }
 
   const handleEdit = async () => {
     if (!editingAction) return;
@@ -404,7 +397,7 @@ function ActionsForm({
           <CardContent className="flex-grow flex flex-col overflow-hidden">
             <div className="mb-4 flex-shrink-0 flex items-end space-x-4">
               <div className="flex-grow">
-                <Label className='' htmlFor="action-title">Action Title</Label>
+                <Label className='mb-2' htmlFor="action-title">Action Title</Label>
                 <Input
                   id="action-title"
                   value={actionTitle}
@@ -413,7 +406,7 @@ function ActionsForm({
                 />
               </div>
               <div className="w-1/3">
-                <Label className='' htmlFor="language-select">Language</Label>
+                <Label className='mb-2' htmlFor="language-select">Language</Label>
                 <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger id="language-select">
                     <SelectValue placeholder="Select language" />
@@ -426,7 +419,7 @@ function ActionsForm({
               </div>
             </div>
             <div className="mb-4 flex-shrink-0">
-              <Label className='' htmlFor="requirements">
+              <Label className='mb-2' htmlFor="requirements">
                 Requirements (comma-separated)
               </Label>
               <Input
@@ -465,6 +458,7 @@ function ActionsForm({
             <Button
               onClick={editingAction ? handleEdit : handleCreateAction}
               className="w-full mt-4"
+              disabled={actionSubmissionLoading}
             >
               Create Action
             </Button>
