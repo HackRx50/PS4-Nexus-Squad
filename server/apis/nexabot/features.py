@@ -8,7 +8,7 @@ from langchain_mistralai.chat_models import ChatMistralAI
 
 from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
 
-from settings import MISTRAL_MODEL_TYPE
+from settings import MISTRAL_MODEL_TYPE, ENVIRONMENT
 
 from storage.db import Session, engine
 from storage.models import ChatSession, Action, Agent
@@ -70,18 +70,19 @@ class NexaBot:
         return self.chatBot.invoke({ "messages": messages })
 
     @classmethod
-    def create(self, session: Session, agent_id: str, llm = None):
-        agent = find_agent_by_id(session, agent_id)
+    def create(self, agent_id: str, llm = None):
+        agent = find_agent_by_id(agent_id)
         if not agent:
             return None
         else:
-            nexabot = NexaBot()
-            nexabot.agent_name = agent.name
-            nexabot.id = agent.agid
-            if llm:
-                nexabot.llm = llm
-            nexabot.boot(session)
-            return nexabot
+            with Session(engine) as session: 
+                nexabot = NexaBot()
+                nexabot.agent_name = agent.name
+                nexabot.id = agent.agid
+                if llm:
+                    nexabot.llm = llm
+                nexabot.boot(session)
+                return nexabot
 
 
 class SessionManager:
@@ -126,11 +127,10 @@ class SessionManager:
         for bot in self.active_bots:
             if bot.id == session.agent:
                 return bot
-        with Session(engine) as db_session:
-            nexabot = NexaBot.create(db_session, session.agent, self.llm)
-            if nexabot:
-                self.active_bots.append(nexabot)
-            return nexabot
+        nexabot = NexaBot.create(agent_id=session.agent, llm=self.llm)
+        if nexabot:
+            self.active_bots.append(nexabot)
+        return nexabot
     
 
     def interact_cli(self, session_id: str, agent_name: str):
@@ -155,28 +155,31 @@ class SessionManager:
     def talk(self, session: ChatSession, nexabot: NexaBot, message: str):
         session_messages = self.sessions_messages.get(session.cid, [])
         session_messages.append(HumanMessage(content=message))
-        from apis.sample import sampleInvoke
-        session_messages.pop()
-        result = sampleInvoke()
-        # result = nexabot.invoke(session_messages)
-        # session_messages.pop()
-        # session_messages = result["messages"]
+       
+        if ENVIRONMENT == "production":
+            result = nexabot.invoke(session_messages)
+            session_messages.pop()
+            session_messages = result["messages"]
+            last_three_response = result["messages"][-4:]
 
-        # last_three_response = result["messages"][-4:]
-
-        # for message in last_three_response:
-        #     if isinstance(message, AIMessage):
-        #         if not message.content:
-        #             continue
-        #         session_messages.append(message)
-        #     elif isinstance(message, HumanMessage):
-        #         session_messages.append(message)
-        
-        # return (result["messages"][-1].content, last_three_response)
-        last_three_response = [HumanMessage(content=message), *result]
-        for message in last_three_response:
-            session_messages.append(message)
-        return "Test Message", last_three_response
+            for message in last_three_response:
+                if isinstance(message, AIMessage):
+                    if not message.content:
+                        continue
+                    session_messages.append(message)
+                elif isinstance(message, HumanMessage):
+                    session_messages.append(message)
+            
+            return (result["messages"][-1].content, last_three_response)
+        else:
+            from apis.sample import sampleInvoke
+            session_messages.pop()
+            result = sampleInvoke()
+            last_three_response = [HumanMessage(content=message), *result]
+            for message in last_three_response:
+                session_messages.append(message)
+            return "Test Message", last_three_response
+    
 
 
     def save_session(self, session_id: str):

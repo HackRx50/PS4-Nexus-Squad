@@ -8,7 +8,7 @@ import Loading from '../components/Loading';
 import { sendEmailVerification } from 'firebase/auth';
 import { useAppDispatch } from '../hooks';
 import { setAppTitle, setUser } from '../store';
-import { E_TITLES } from '../constants';
+import { E_TITLES, TOAST_MESSAGES } from '../constants';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -42,16 +42,16 @@ const SignupPage = () => {
       setCurrentUser!(user);
       toasts.push({
         id: "signup",
-        title: "User Signup successfull",
+        title: TOAST_MESSAGES.SIGNUP_SUCCESS.title,
         duration: 3000
-      })
+      });
       if (credential.user) {
         await sendEmailVerification(credential.user);
         toasts.push({
           id: "emailVerification",
-          title: "Verification email has been sent!",
+          title: TOAST_MESSAGES.EMAIL_VERIFICATION_SENT.title,
           duration: 3000
-        })
+        });
       }
       setFormSubmissionLoading(false);
     } catch (err) {

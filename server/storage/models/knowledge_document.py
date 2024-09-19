@@ -54,6 +54,7 @@ class KnowledgeDocument(Base):
         with Session(engine) as session:
             try:
                 document = session.query(KnowledgeDocument).filter(KnowledgeDocument.did == document_id).first()
+
                 if document:
                     session.delete(document)
                     session.commit()

@@ -11,9 +11,9 @@ import { sendEmailVerification } from 'firebase/auth';
 import { auth } from '../firebase.config';
 import { Loader2 } from 'lucide-react';
 import VerificationPageGuard from '../guards/VerificationPageGuard';
-import { useAppDispatch, useAppSelector } from '../hooks';
+import { useAppDispatch } from '../hooks';
 import { setAppTitle } from '../store';
-import { E_TITLES } from '../constants';
+import { E_TITLES, TOAST_MESSAGES } from '../constants';
 
 const SendVerifyEmailPage = () => {
   const [error, setError] = useState<string | null>(null);
@@ -34,15 +34,15 @@ const SendVerifyEmailPage = () => {
         await sendEmailVerification(user);
         setEmailSentLoading(false);
         toast({
-          title: 'Verification Email',
-          description: 'Verification email has been sent again!',
+          title: TOAST_MESSAGES.VERIFICATION_EMAIL_SENT.title,
+          description: TOAST_MESSAGES.VERIFICATION_EMAIL_SENT.description,
           duration: 3000,
           type: 'background',
         });
       } else {
         toast({
-          title: 'User not found',
-          description: "Can't send verification email",
+          title: TOAST_MESSAGES.USER_NOT_FOUND.title,
+          description: TOAST_MESSAGES.USER_NOT_FOUND.description,
           duration: 3000,
           type: 'background',
           variant: 'destructive',
@@ -50,7 +50,7 @@ const SendVerifyEmailPage = () => {
       }
     } catch (error) {
       toast({
-        title: 'Error Sending Mail',
+        title: TOAST_MESSAGES.ERROR_SENDING_MAIL.title,
         description: error as any,
         duration: 3000,
         variant: 'destructive',

@@ -5,7 +5,7 @@ import {
     setDoc,
 } from 'firebase/firestore';
 import { auth, firestore } from './firebase.config';
-import { Action, DocumentMetaData, User } from './types';
+import { Action, APIKey, DocumentMetaData, User } from './types';
 import {  Domain } from './constants';
 
 
@@ -63,6 +63,20 @@ export async function getAgents() {
         const error = await response.json();
         console.log("Agents Fetch Error: ", error.details);
         return null
+    }
+}
+
+export async function getAPIKeys() {
+    const response = await appFetch('/api/v1/api_key', { agent_name: "admin" });
+    if (response.ok) {
+      const encryptedData = await response.text();
+      const apiKeysString = await decryptMessage(encryptedData);
+      const apiKeys: APIKey[] = JSON.parse(apiKeysString);
+      return apiKeys;
+    } else {
+        const error = await response.json();
+        console.log("Agents Fetch Error: ", error.details);
+        return []
     }
 }
 
@@ -124,3 +138,65 @@ export async function appFetch(url: string, options: RequestInit & { agent_name?
     return fetch(url, updatedOptions);
 }
 
+
+
+function base64ToArrayBuffer(base64: string) {
+    base64 = base64.replace(/[^A-Za-z0-9+/]/g, "");
+    
+    while (base64.length % 4 !== 0) {
+        base64 += "=";
+    }
+
+    try {
+        const binaryString = window.atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    } catch (e) {
+        console.error("Error decoding base64:", e);
+        return null;
+    }
+}
+
+export async function decryptMessage(encryptedMessageBase64: string) {
+    const hexKey = process.env.SECRET_KEY;
+    if (!hexKey) {
+        throw new Error("Secret key not found");
+    }
+
+    const keyBuffer = hexToArrayBuffer(hexKey);
+
+    const encryptedBuffer = base64ToArrayBuffer(encryptedMessageBase64);
+    const encryptedBytes = new Uint8Array(encryptedBuffer!);
+
+    const iv = encryptedBytes.slice(0, 16);
+    const ciphertext = encryptedBytes.slice(16); 
+
+    const key = await window.crypto.subtle.importKey(
+        'raw',
+        keyBuffer,
+        { name: 'AES-CBC', length: 256 },
+        false,
+        ['decrypt']
+    );
+
+
+    const decryptedBuffer = await window.crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv: iv },
+        key,
+        ciphertext
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedBuffer);
+}
+
+function hexToArrayBuffer(hex: string) {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+    }
+    return bytes.buffer;
+}

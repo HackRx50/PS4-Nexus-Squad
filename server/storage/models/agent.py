@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import cuid
 
+from storage.db import Session, engine
 from .base import Base
 from .utils_models import AccessLevel
 
@@ -22,12 +23,29 @@ class Agent(Base):
     allowed_users = Column("allowed_users", JSON, nullable=True, default=list)
 
     def __init__(
-        self, name: str, owner=None, access: AccessLevel = AccessLevel.PRIVATE
+        self, name: str, owner=None, access: AccessLevel = AccessLevel.PRIVATE, description: str = None
     ):
         self.name = name
         if owner is not None:
             self.owner = owner
+        self.description = description
         self.access = access
+
+    @classmethod
+    def create(self, name: str, owner=None, access: AccessLevel = AccessLevel.PRIVATE, description: str = None):
+        with Session(engine) as session:
+            try:
+                agent = Agent(name, owner, access, description=description)
+                session.add(agent)
+                session.commit()
+                session.refresh(agent)
+                return agent
+            except Exception as e:
+                session.rollback()
+                raise e
+            
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def add_user_to_allowed_list(self, session, user_id):
         """Add a user to the allowed users list."""
@@ -48,24 +66,15 @@ class Agent(Base):
             return True
         return False
 
-    def change_access_level(self, session, new_access_level):
+    def change_access_level(self, session, new_access_level) -> bool:
         """Change the access level of the agent."""
         if new_access_level not in AccessLevel:
             raise ValueError("Invalid access level.")
 
-        if (
-            self.access == AccessLevel.PUBLIC
-            and new_access_level == AccessLevel.PRIVATE
-        ):
+        if self.access != new_access_level:
             # Handle transition from PUBLIC to PRIVATE
             self.access = new_access_level
             session.commit()
-        elif (
-            self.access == AccessLevel.PRIVATE
-            and new_access_level == AccessLevel.PUBLIC
-        ):
-            self.access = new_access_level
-            self.allowed_users = []
-            session.commit()
+            return True
         else:
-            raise ValueError("No change in access level.")
+            return False

@@ -1,5 +1,5 @@
 import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Action, DocumentMetaData, User, Agent, TUserSliceInitialState, TDocumentMetaDataSliceInitialState, TActionSliceInitialState, TAgentSliceInitialState, TAppTitle } from "./types";
+import { Action, DocumentMetaData, User, Agent, TUserSliceInitialState, TDocumentMetaDataSliceInitialState, TActionSliceInitialState, TAgentSliceInitialState, TAppTitle, TAPIKeySliceInitialState, APIKey } from "./types";
 import { E_TITLES } from "./constants";
 
 
@@ -29,12 +29,18 @@ export const userSlice = createSlice({
     reducers: {
         setUser(state, action: PayloadAction<User | null>) {
             state.user = action.payload
+        },
+        setUserLimits(state, action: PayloadAction<number>) {
+            if (state.user) {
+                state.user.availbaleLimits = action.payload
+            }
         }
     }
 });
 
 const documentMetaDataSliceInitialState: TDocumentMetaDataSliceInitialState = {
-    documentMetaData: {}
+    documentMetaData: {},
+    loaded: false
 }
 
 export const documentMetaDataSlice = createSlice({
@@ -49,7 +55,8 @@ export const documentMetaDataSlice = createSlice({
 
 
 const actionSliceInitialState: TActionSliceInitialState = {
-    actions: {}
+    actions: {},
+    loaded: false
 }
 
 export const actionSlice = createSlice({
@@ -63,7 +70,8 @@ export const actionSlice = createSlice({
 });
 
 const agentSliceInitialState: TAgentSliceInitialState = {
-    agents: []
+    agents: [],
+    loaded: false
 }
 
 export const agentSlice = createSlice({
@@ -75,15 +83,49 @@ export const agentSlice = createSlice({
         },
         clearActions(state) {
             state.agents = []
+        },
+        setAgentAccess(state, action: PayloadAction<string>) {
+            const agentIndex = state.agents.findIndex(v => v.agid === action.payload);
+            const agent = state.agents[agentIndex];
+            if (agent.access === "PUBLIC") {
+                agent.access = "PRIVATE";
+            } else {
+                agent.access = "PUBLIC"
+            }
         }
     }
 });
 
-export const { setUser } = userSlice.actions;
+const apikeysSliceInitialState: TAPIKeySliceInitialState = {
+    apikeys: [],
+    loaded: false
+}
+
+export const apikeysSlice = createSlice({
+    initialState: apikeysSliceInitialState,
+    name: "apikeys",
+    reducers: {
+        setAPIkeys(state, action: PayloadAction<APIKey[]>) {
+            state.apikeys = action.payload
+        },
+        addAPIKey(state, action: PayloadAction<APIKey>) {
+            state.apikeys.unshift(action.payload);
+        },
+        removeAPIKey(state, action: PayloadAction<string>) {
+            state.apikeys = state.apikeys.filter(apikey => apikey.uakid !== action.payload);
+        },
+        clearAPIKeys(state) {
+            state.apikeys = []
+        }
+    }
+});
+
+export const { setUser, setUserLimits } = userSlice.actions;
 export const { addActions } = actionSlice.actions;
 export const { addDocumentMetaData } = documentMetaDataSlice.actions;
-export const { setAgents, clearActions } = agentSlice.actions;
+export const { setAgents, clearActions, setAgentAccess } = agentSlice.actions;
 export const { setAppTitle } = appTitleSlice.actions;
+export const { addAPIKey, clearAPIKeys, setAPIkeys, removeAPIKey } = apikeysSlice.actions;
 
 export const store = configureStore({
     reducer: {
@@ -91,7 +133,8 @@ export const store = configureStore({
         actionsSlice: actionSlice.reducer,
         documentsSlice: documentMetaDataSlice.reducer,
         agentsSlice: agentSlice.reducer,
-        appTitleSlice: appTitleSlice.reducer
+        appTitleSlice: appTitleSlice.reducer,
+        apikeysSlice: apikeysSlice.reducer
     },
     devTools: process.env.NODE_ENV === "development"
 })

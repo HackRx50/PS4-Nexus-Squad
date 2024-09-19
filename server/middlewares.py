@@ -1,5 +1,5 @@
-from fastapi import Request, Response
-from starlette.responses import JSONResponse, RedirectResponse
+from fastapi import Request, Response, HTTPException
+from starlette.responses import JSONResponse
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from mimetypes import guess_type
@@ -10,7 +10,7 @@ from storage.db import Session, engine
 from storage.utils import find_agent_by_name
 from settings import BASE_DIR
 
-from utils import authenticate_with_token, checkApiKey, getSPAContent, getSubdomain
+from utils import authenticate_with_token, checkApiKey, getSPAContent, getSubdomain, checkUserAPIKey
 
 
 class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
@@ -39,14 +39,23 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
         request.state.subdomain = subdomain
         print(subdomain)
         
+        user_api_key = request.headers.get("x-user-api-key")
+        api_key = request.headers.get("x-api-key")
 
         # Serve Docs
         if subdomain == 'admin' and (path.startswith("/docs") or path.startswith("/openapi.json")):
             return await call_next(request)
-        
-        # Check API Key
-        if path.startswith("/api") and not host.startswith("test.localhost"):
-            api_key = request.headers.get("x-api-key")
+
+        if path.startswith("/api"):
+            if path.startswith("/api/v1/chat") and user_api_key:
+                try:
+                    user_id = checkUserAPIKey(user_api_key, agent_name=subdomain)
+                    request.state.user_id = user_id
+                    request.state.userKey = user_api_key
+                    return await call_next(request)
+                except HTTPException as e:
+                    return JSONResponse(e.detail, status_code=e.status_code)
+                
             try:
                 if api_key:
                     result = checkApiKey(api_key)
@@ -54,6 +63,7 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
                         return JSONResponse(status_code=401, content={"detail": "Invalid API Key"})
                 else:
                     return JSONResponse(status_code=401, content={"detail": "No API Key Found"})
+                
             except Exception as e:
                 print(e)
                 return JSONResponse(status_code=401, content={"detail": "Error validating api key"})

@@ -10,9 +10,9 @@ import {
 import { applyActionCode } from 'firebase/auth';
 import { auth } from '../firebase.config';
 import { Loader2 } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '../hooks';
+import { useAppDispatch } from '../hooks';
 import { setAppTitle } from '../store';
-import { E_TITLES, EMAIL_VERIFICATION_REDIRECT_URL } from '../constants';
+import { E_TITLES, EMAIL_VERIFICATION_REDIRECT_URL, TOAST_MESSAGES } from '../constants';
 import VerificationPageGuard from '../guards/VerificationPageGuard';
 
 const VerifyEmailPage = ({ oobCode }: { oobCode: string}) => {
@@ -34,8 +34,8 @@ const VerifyEmailPage = ({ oobCode }: { oobCode: string}) => {
         await applyActionCode(auth, oobCode);
         setEmailSentLoading(false);
         toast({
-          title: 'Email Verified',
-          description: 'Email Verification Successfull!',
+          title: TOAST_MESSAGES.EMAIL_VERIFIED.title,
+          description: TOAST_MESSAGES.EMAIL_VERIFIED.description,
           duration: 3000,
           type: 'background',
         });
@@ -44,8 +44,8 @@ const VerifyEmailPage = ({ oobCode }: { oobCode: string}) => {
         }, 1000)
       } else {
         toast({
-          title: 'User not found',
-          description: "Can't send verification email",
+          title: TOAST_MESSAGES.USER_NOT_FOUND.title,
+          description: TOAST_MESSAGES.USER_NOT_FOUND.description,
           duration: 3000,
           type: 'background',
           variant: 'destructive',
@@ -53,7 +53,7 @@ const VerifyEmailPage = ({ oobCode }: { oobCode: string}) => {
       }
     } catch (error) {
       toast({
-        title: 'Error Sending Mail',
+        title: TOAST_MESSAGES.ERROR_SENDING_MAIL.title,
         description: error as any,
         duration: 3000,
         variant: 'destructive',

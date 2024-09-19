@@ -20,7 +20,6 @@ export default function AgentDashBoardGurad({ children }: { children: React.Reac
   }, [agent_name])
 
   useEffect(() => {
-    console.log(user)
     if (loaded === AuthLoadStatus.IDLE && !user) {
       return;
     }

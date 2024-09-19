@@ -7,7 +7,9 @@ from apis.agents.utils import is_used_by_other
 
 from storage.db import Session, engine
 from storage.models import KnowledgeDocument
-from storage.utils import find_agent_by_name
+from storage.utils import find_agent_by_name, find_agent_by_id
+
+from apis.nexabot.features import get_vector_store
 
 from .utils import temp_save_file
 from apis.nexabot.embeddings import save_embeddings
@@ -49,9 +51,14 @@ async def upload_document(request: Request, file: UploadFile = File()):
     
 @document_router.delete("/{document_id}")
 async def deleteDocument(document_id: str):
-    result = KnowledgeDocument.delete_by_id(document_id=document_id)
-    if result:
-        # return Response(status_code=204, content=f"Document with id: {document_id} deleted")
+    try: 
+        with Session(engine) as session:
+            document = session.query(KnowledgeDocument).filter(KnowledgeDocument.did == document_id).first()
+            agent = find_agent_by_id(document.agent)
+            vector_store = get_vector_store(agent_name=agent.name)
+            vector_store.delete(document.vector_ids)
+            session.delete(document)
+            session.commit()
         return {"message": f"Document with id: {document_id} deleted", "document_id": document_id}
-    else:
+    except:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document doesn't exists")

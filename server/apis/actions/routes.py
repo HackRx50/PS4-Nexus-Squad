@@ -26,6 +26,7 @@ def getActions(request: Request):
 def createAction(action_data: PostActionSchema, request: Request):
     with Session(engine) as session:
         module_name = create_action_file(action_data.code)
+        print(action_data)
         subdomain = request.state.subdomain
         agent = find_agent_by_name(session, subdomain)
         print("AgentID:", agent.agid)

@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import ResetPasswordPage from "./ResetPasswordPage";
 import VerifyEmailPage from "./VerifyEmail";
-import { useAppDispatch } from "../hooks";
+import { AUTH_ACTION_DEFAULT_REDIRECT_URL } from "../constants";
 
 export default function AuthActionPage() {
     const [searchParams] = useSearchParams();
     const [mode, setMode] = useState<string>();
     const [oobCode, setoobCode] = useState<string>();
-
-    const navigate = useNavigate();
     
     useEffect(() => {
         const mode = searchParams.get("mode");
-        const apiKey = searchParams.get("apiKey");
         const oobCode = searchParams.get("oobCode");
 
         if (mode) {
@@ -24,7 +21,7 @@ export default function AuthActionPage() {
         }
 
         if (!mode || !oobCode) {
-            window.location.href = "https://admin.nexaflow.co/login"
+            window.location.href = AUTH_ACTION_DEFAULT_REDIRECT_URL;
         }
     }, []);
 

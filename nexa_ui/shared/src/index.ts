@@ -9,5 +9,8 @@ export * from  "./components/ui/input";
 export * from "./components/ui/toaster";
 export * from "./components/ui/dialog"
 export * from "./hooks/use-toast";
+export * from "./components/ui/badge";
+export * from "./components/ui/alert-dialog";
+export * from "./components/ui/switch"
 
 export * from "./utils";
