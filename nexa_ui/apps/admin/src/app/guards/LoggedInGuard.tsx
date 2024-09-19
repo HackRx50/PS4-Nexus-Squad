@@ -18,7 +18,7 @@ export default function LoginPageGuard({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [redirectURL, setRedirectURL] = useState('');
-  const [checkingAccess, setCheckingAccess] = useState(true);
+  const [checkingAccess, setCheckingAccess] = useState(false);
 
   useEffect(() => {
     setRedirectURL(window.location.href);

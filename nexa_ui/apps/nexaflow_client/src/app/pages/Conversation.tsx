@@ -191,7 +191,7 @@ function ChatPanel() {
   async function getTitle(sessionID: string, query: string) {
     const data = { query };
     try {
-      const response = await appFetch(`http://clock.localhost:8000/api/v1/chat/new/${sessionID}`, {
+      const response = await appFetch(`/api/v1/chat/new/${sessionID}`, {
         method: 'POST',
         accessToken: accessToken!,
         headers: {

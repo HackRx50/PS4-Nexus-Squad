@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Card, CardContent, CardHeader, useToast } from '@nexa_ui/shared';
+import { Button, Input, Card, CardContent, CardHeader, useToast, Toaster } from '@nexa_ui/shared';
 import { loginWithEmail, useAuth } from '../contexts/AuthContext';
 import { getUserFromDB } from '../utility';
 import LoginPageGuard from '../guards/LoggedInGuard';
@@ -55,9 +55,11 @@ const LoginPage = () => {
         description: TOAST_MESSAGES.LOGIN_SUCCESS.description,
         duration: 3000,
       });
-    } catch (error: any) {
+    } catch (err: any) {
       setFormSubmissionLoading(false);
-      setError(error || 'Login failed');
+      if (err && err.message &&  err.message .includes("invalid-credential")) {
+        setError('Login failed |  Invalid Credential');
+      }
       toast({
         title: TOAST_MESSAGES.LOGIN_FAILED.title,
         description: error || 'Login failed',
@@ -122,6 +124,7 @@ const LoginPage = () => {
             </form>
           </CardContent>
         </Card>
+        <Toaster />
       </div>
     </LoginPageGuard>
   );
