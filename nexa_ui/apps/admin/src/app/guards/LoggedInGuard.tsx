@@ -17,6 +17,7 @@ export default function LoginPageGuard({
   const user = useAppSelector((state) => state.userReducer.user);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { search } = useLocation();
   const [redirectURL, setRedirectURL] = useState('');
   const [checkingAccess, setCheckingAccess] = useState(false);
 
@@ -39,6 +40,9 @@ export default function LoginPageGuard({
     if (user) {
       const redirectURL = searchParams.get('redirect');
       const authURL = searchParams.get('auth');
+      const mode = searchParams.get('mode');
+      const oobCode = searchParams.get('oobCode');
+      const apiKey = searchParams.get('apiKey');
       if (redirectURL && authURL && user.accessToken) {
         setCheckingAccess(true);
         const result = getSubdomain(redirectURL);
@@ -62,6 +66,9 @@ export default function LoginPageGuard({
             }
           }
         }
+      } else if (mode && oobCode && apiKey) {
+        setCheckingAccess(false);
+        return navigate(`/auth/action${search}`)
       }
       setCheckingAccess(false);
       navigate('/agents');

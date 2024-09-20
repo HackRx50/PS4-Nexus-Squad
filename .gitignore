@@ -34,3 +34,5 @@ venv
 
 server/temp/*.env
 .env
+build.sh
+run.sh
