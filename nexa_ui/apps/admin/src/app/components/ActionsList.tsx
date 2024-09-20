@@ -34,7 +34,7 @@ function ActionCard({
   const { toast } = useToast();
   const { agent_name } = useParams();
   const dispatch = useAppDispatch();
-  const [deleting, setDeleting] = useState(true)
+  const [deleting, setDeleting] = useState(false)
 
   const handleDeleteAction = async (id: string) => {
     try {
@@ -110,7 +110,7 @@ function DocumentCard({
   const { toast } = useToast();
   const { agent_name } = useParams();
   const dispatch = useAppDispatch();
-  const [deleting, setDeleting] = useState(true)
+  const [deleting, setDeleting] = useState(false)
 
   async function handleDeleteDocument(did: string) {
     try {
