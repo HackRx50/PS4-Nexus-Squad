@@ -50,6 +50,7 @@ export default function LoginPageGuard({
           ) {
             const response = await appFetch(`/api/v1/agents/${subdomain}`, {
               accessToken: user.accessToken,
+              agent_name: "admin"
             });
             const data = await response.json();
             if (data.agent) {
@@ -65,6 +66,7 @@ export default function LoginPageGuard({
       setCheckingAccess(false);
       navigate('/agents');
     }
+    setCheckingAccess(false);
   }
 
   useEffect(() => {
