@@ -40,5 +40,5 @@ if __name__=="__main__":
             sessionManager.save_session(chat_session_id)
     else:
         from uvicorn import run
-        # run("main:app", host="0.0.0.0", port=443, reload=True, ssl_certfile="./certs/certificate.pem", ssl_keyfile="./certs/private-key.pem")
+        # run("main:app", host="0.0.0.0", port=443, ssl_certfile="./certs/certificate.pem", ssl_keyfile="./certs/private-key.pem")
         run("main:app", host="0.0.0.0", port=8000, reload=True)
