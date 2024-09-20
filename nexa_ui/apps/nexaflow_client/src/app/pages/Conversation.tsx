@@ -2,7 +2,7 @@ import { useState, KeyboardEvent, useEffect, useRef } from 'react';
 import { Button, Toaster, useToast } from '@nexa_ui/shared';
 import { Textarea } from '@nexa_ui/shared';
 import { Card } from '@nexa_ui/shared';
-import { ArrowRight, Loader2, Menu, Plus } from 'lucide-react';
+import { ArrowRight, Loader2, Menu, Plus, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -11,7 +11,12 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { SessionList } from '../components/SessionList';
 import { appFetch, BASE_URL } from '../utilities';
 import { createId } from '@paralleldrive/cuid2';
-import { addSession, setSessionMessage, setSessionMessages, setSessionTitle } from '../store';
+import {
+  addSession,
+  setSessionMessage,
+  setSessionMessages,
+  setSessionTitle,
+} from '../store';
 
 function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,6 +35,7 @@ function ChatPanel() {
   const { toast } = useToast();
 
   let { session_id } = useParams<{ session_id: string }>();
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
   const fetchSessionData = async (session_id: string) => {
     try {
@@ -136,7 +142,6 @@ function ChatPanel() {
       session_id = newSessionID;
     }
 
-
     if (inputText.trim()) {
       setInputText('');
       setLLMResponseLoading(true);
@@ -157,7 +162,8 @@ function ChatPanel() {
         ]);
         if (messages.length < 2) {
           getTitle(session_id, inputText.trim())
-          .then().catch((err) => console.log(err));
+            .then()
+            .catch((err) => console.log(err));
         }
         const response = await appFetch(`/api/v1/chat/${session_id}`, {
           method: 'POST',
@@ -174,18 +180,18 @@ function ChatPanel() {
         } else if (response.status === 403) {
           const data = await response.json();
           toast({
-            title: "Message Send Error",
-            description: data["detail"],
+            title: 'Message Send Error',
+            description: data['detail'],
             duration: 3000,
-            variant: "destructive"
-          })
+            variant: 'destructive',
+          });
         } else {
           toast({
-            title: "Message Send Error",
-            description: "Unknow Failure",
+            title: 'Message Send Error',
+            description: 'Unknow Failure',
             duration: 3000,
-            variant: "destructive"
-          })
+            variant: 'destructive',
+          });
         }
       } catch (error) {
         console.error('Error fetching LLM response:', error);
@@ -222,7 +228,9 @@ function ChatPanel() {
           if (done) break;
           const decodedValue = decoder.decode(value);
           responseData += decodedValue;
-          dispatch(setSessionTitle({ sessionId: sessionID, title: responseData}));
+          dispatch(
+            setSessionTitle({ sessionId: sessionID, title: responseData })
+          );
         }
       }
     } catch (error) {
@@ -238,7 +246,7 @@ function ChatPanel() {
         accessToken: accessToken!,
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
       });
       if (response.ok) {
         const sessionData: Session = await response.json();
@@ -265,16 +273,20 @@ function ChatPanel() {
     setShowSidebar(!showSidebar);
   }
 
+  const toggleRightSidebar = () => {
+    setIsRightSidebarOpen(!isRightSidebarOpen);
+  };
+
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
+      {/* Left Sidebar */}
       <Card
         className={`border-r md:flex md:flex-col ${
-          innerWidth < 768
+          window.innerWidth < 768
             ? 'fixed top-0 left-0 h-full transition-transform duration-500 ease-in-out'
-            : 'w-96'
+            : 'w-1/4'
         } ${
-          innerWidth < 768
+          window.innerWidth < 768
             ? showSidebar
               ? 'translate-x-0 w-full z-50'
               : '-translate-x-full w-96'
@@ -284,11 +296,11 @@ function ChatPanel() {
         <div className="p-4 flex justify-between items-center">
           <h2 className="text-lg font-semibold">Nexaflow</h2>
           <div className="gap-2 flex">
-            <Button onClick={() => onNewSessionButtonClick()} variant="ghost">
+            <Button onClick={onNewSessionButtonClick} variant="ghost">
               <Plus />
             </Button>
             <Button
-              onClick={() => handleShowSideMenu()}
+              onClick={handleShowSideMenu}
               variant="outline"
               className="cursor-pointer md:hidden"
             >
@@ -301,15 +313,20 @@ function ChatPanel() {
         </div>
       </Card>
 
-      <div className="flex-1 flex flex-col">
-        <div className="p-4 flex justify-between items-center top-0 left-0 w-full z-10  md:hidden">
+      {/* Central Panel */}
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+          isRightSidebarOpen ? 'w-1/2' : 'w-3/4'
+        }`}
+      >
+        <div className="p-4 flex justify-between items-center top-0 left-0 w-full z-10 md:hidden">
           <h2 className="text-lg font-semibold">Nexaflow</h2>
           <div className="gap-2 flex">
-            <Button onClick={() => onNewSessionButtonClick()} variant="ghost">
+            <Button onClick={onNewSessionButtonClick} variant="ghost">
               <Plus />
             </Button>
             <Button
-              onClick={() => handleShowSideMenu()}
+              onClick={handleShowSideMenu}
               variant="outline"
               className="cursor-pointer"
             >
@@ -326,39 +343,86 @@ function ChatPanel() {
               }`}
             >
               <div
-                className={`max-w-[70%] p-2 rounded-lg ${
+                className={`max-w-[70%] p-4 overflow-hidden rounded-lg ${
                   message.type === 'human'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted p-8'
+                    : 'bg-muted p-4 flex flex-col gap-4'
                 } break-words`}
               >
-                {message.type === 'human' ? (
-                  message.content
-                ) : (
-                  <ReactMarkdown
-                    // remarkPlugins={[remarkGfm]}
-                    // components={{
-                    //   code({ inline, className, children, ...props }: any) {
-                    //     const match = /language-(\w+)/.exec(className || '');
-                    //     return !inline && match ? (
-                    //       <pre
-                    //         className={`p-2 bg-gray-800 rounded ${className} overflow-x-auto`}
-                    //       >
-                    //         <code className={`language-${match[1]}`} {...props}>
-                    //           {children}
-                    //         </code>
-                    //       </pre>
-                    //     ) : (
-                    //       <code className={className} {...props}>
-                    //         {children}
-                    //       </code>
-                    //     );
-                    //   },
-                    // }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                )}
+                <div className="prose prose-sm max-w-none overflow-x-auto">
+                  {message.type === 'human' ? (
+                    message.content
+                  ) : (
+                    <div className="px-4">
+                      <ReactMarkdown
+                        components={{
+                          code({ inline, className, children, ...props }) {
+                            const match = /language-(\w+)/.exec(
+                              className || ''
+                            );
+                            return !inline && match ? (
+                              <div className="overflow-x-auto">
+                                <pre
+                                  className={`p-2 bg-gray-100 dark:bg-gray-800 rounded ${className}`}
+                                >
+                                  <code
+                                    className={`language-${match[1]}`}
+                                    {...props}
+                                  >
+                                    {children}
+                                  </code>
+                                </pre>
+                              </div>
+                            ) : (
+                              <code
+                                className={`${className} bg-gray-100 dark:bg-gray-800 rounded px-1`}
+                                {...props}
+                              >
+                                {children}
+                              </code>
+                            );
+                          },
+                          p: ({ children }) => (
+                            <p className="mb-4">{children}</p>
+                          ),
+                          h1: ({ children }) => (
+                            <h1 className="text-2xl font-bold mb-4">
+                              {children}
+                            </h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-xl font-bold mb-3">
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-lg font-bold mb-2">
+                              {children}
+                            </h3>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-disc pl-6 mb-4">{children}</ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal pl-6 mb-4">
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children }) => (
+                            <li className="mb-1">{children}</li>
+                          ),
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4">
+                              {children}
+                            </blockquote>
+                          ),
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -372,7 +436,7 @@ function ChatPanel() {
           )}
           <div ref={messagesEndRef} />
         </div>
-        <div className="border-t p-4 border-r-0">
+        <div className="border-t p-4">
           <div className="flex items-end space-x-2">
             <Textarea
               ref={textareaRef}
@@ -382,12 +446,30 @@ function ChatPanel() {
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <Button size="icon" onClick={handleSendMessage}>
+            <Button
+              disabled={llmResponseLoading}
+              size="icon"
+              onClick={handleSendMessage}
+            >
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
+
+      {isRightSidebarOpen && window.innerWidth > 768 && (
+        <Card className="w-1/4 border-l">
+          <div className="p-4 flex justify-between items-center">
+            <h2 className="text-xl font-bold">Right Sidebar</h2>
+            <Button variant="ghost" size="icon" onClick={toggleRightSidebar}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="p-4">
+            <p>This is the right sidebar content.</p>
+          </div>
+        </Card>
+      )}
       <Toaster />
     </div>
   );
