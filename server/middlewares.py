@@ -6,6 +6,7 @@ from mimetypes import guess_type
 from os.path import join
 import os
 
+from storage.models import User
 from storage.db import Session, engine
 from storage.utils import find_agent_by_name
 from settings import BASE_DIR
@@ -46,7 +47,7 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
         if subdomain == 'admin' and (path.startswith("/docs") or path.startswith("/openapi.json")):
             return await call_next(request)
 
-        if path.startswith("/api"):
+        if path.startswith("/api/v1"):
             if path.startswith("/api/v1/chat") and user_api_key:
                 try:
                     user_id = checkUserAPIKey(user_api_key, agent_name=subdomain)
@@ -75,6 +76,11 @@ class DomainStaticFilesMiddleware(BaseHTTPMiddleware):
             if not result:
                 return JSONResponse(status_code=401, content={"detail": "Invalid Authorization Token"})
             request.state.user_id = result.user_id
+            if path.startswith("/api/v1/chat") and request.method == "POST" and result.user_id:
+                limitsAvailable = User.check_limits(result.user_id)
+                if not limitsAvailable:
+                    return JSONResponse(status_code=403, content={"detail": "Limit Exceed"})
+
             return await call_next(request)
 
 
