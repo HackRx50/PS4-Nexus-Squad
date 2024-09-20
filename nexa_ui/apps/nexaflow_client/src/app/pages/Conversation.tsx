@@ -171,8 +171,21 @@ function ChatPanel() {
               dispatch(setSessionMessage({ sessionId: session_id!, message }));
             }
           });
+        } else if (response.status === 403) {
+          const data = await response.json();
+          toast({
+            title: "Message Send Error",
+            description: data["detail"],
+            duration: 3000,
+            variant: "destructive"
+          })
         } else {
-          console.log(await response.text());
+          toast({
+            title: "Message Send Error",
+            description: "Unknow Failure",
+            duration: 3000,
+            variant: "destructive"
+          })
         }
       } catch (error) {
         console.error('Error fetching LLM response:', error);

@@ -6,7 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.graph.graph import CompiledGraph
 from langchain_mistralai.chat_models import ChatMistralAI
 
-from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
+from langchain_core.messages import AIMessage, ToolMessage, HumanMessage, SystemMessage
 
 from settings import MISTRAL_MODEL_TYPE, ENVIRONMENT
 
@@ -15,6 +15,22 @@ from storage.models import ChatSession, Action, Agent
 from storage.utils import find_agent_by_id, find_agent_by_name, get_actions_by_agent_name
 
 from .embeddings import get_vector_store
+
+# systemMessageContent = """
+#     You are Nexabot a helpful AI Assistant which helps user executes task and query data for the relevant information and convert the information in the easy understandable format.
+    
+#     How you should answer questions
+
+#     For any query if there are no available tools you can call
+
+#     then always use the search tool for finding relevant information about query
+
+#     and if no information found in the queried search result then inform the user that result available
+
+#     Don't tell user about source and metadata of the document and also don't show the list of relevant documents in the result
+
+#     And In case any tools available other than search tool use that.
+# """
 
 def get_vector_tool(agent_name: str):
     @tool
@@ -67,7 +83,7 @@ class NexaBot:
             return False
         
     def invoke(self, messages: List):
-        return self.chatBot.invoke({ "messages": messages })
+        return self.chatBot.invoke({ "messages": [*messages] })
 
     @classmethod
     def create(self, agent_id: str, llm = None):
@@ -141,7 +157,7 @@ class SessionManager:
                 if not query.strip():
                     query = input("> ")
                     continue
-                message, result  =self.talk(session, nexabot, query)
+                message, result = self.talk(session, nexabot, query)
                 print(message)
                 query = input("> ")
             try:

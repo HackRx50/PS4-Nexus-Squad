@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import Conversation from "./pages/Conversation";
 import HomePage from "./pages/HomePage";
@@ -9,6 +9,7 @@ import AuthenticatePage from "./pages/AuthenticatePage";
 import { useEffect } from "react";
 
 function App() {
+  
   
   useEffect(() => {
     console.log("Domain:", process.env.DOMAIN)
