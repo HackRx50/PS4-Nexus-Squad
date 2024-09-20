@@ -316,32 +316,32 @@ function ChatPanel() {
                 className={`max-w-[70%] p-2 rounded-lg ${
                   message.type === 'human'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
+                    : 'bg-muted p-8'
                 } break-words`}
               >
                 {message.type === 'human' ? (
                   message.content
                 ) : (
                   <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      code({ inline, className, children, ...props }: any) {
-                        const match = /language-(\w+)/.exec(className || '');
-                        return !inline && match ? (
-                          <pre
-                            className={`p-2 bg-gray-800 rounded ${className} overflow-x-auto`}
-                          >
-                            <code className={`language-${match[1]}`} {...props}>
-                              {children}
-                            </code>
-                          </pre>
-                        ) : (
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        );
-                      },
-                    }}
+                    // remarkPlugins={[remarkGfm]}
+                    // components={{
+                    //   code({ inline, className, children, ...props }: any) {
+                    //     const match = /language-(\w+)/.exec(className || '');
+                    //     return !inline && match ? (
+                    //       <pre
+                    //         className={`p-2 bg-gray-800 rounded ${className} overflow-x-auto`}
+                    //       >
+                    //         <code className={`language-${match[1]}`} {...props}>
+                    //           {children}
+                    //         </code>
+                    //       </pre>
+                    //     ) : (
+                    //       <code className={className} {...props}>
+                    //         {children}
+                    //       </code>
+                    //     );
+                    //   },
+                    // }}
                   >
                     {message.content}
                   </ReactMarkdown>

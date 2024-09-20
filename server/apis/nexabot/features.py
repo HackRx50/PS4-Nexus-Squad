@@ -159,7 +159,7 @@ class SessionManager:
         if ENVIRONMENT == "production":
             result = nexabot.invoke(session_messages)
             session_messages.pop()
-            session_messages = result["messages"]
+            # session_messages = result["messages"]
             last_three_response = result["messages"][-4:]
 
             for message in last_three_response:
