@@ -41,9 +41,9 @@ To set up the project on your local machine:
     cd nexaflow
     ```
 
-2. Navigate to the `nexa_backend` folder:
+2. Navigate to the `server` folder:
     ```bash
-    cd nexa_backend
+    cd server
     ```
 
 3. Create a virtual environment:
@@ -69,7 +69,7 @@ To set up the project on your local machine:
 
 6. Set up environment variables:
 
-    Create a `.env` file in the root directory of the `nexa_backend` folder and fill in the following keys:
+    Create a `.env` file in the root directory of the `server` folder and fill in the following keys:
 
     ```bash
     PINECONE_API_KEY=<your-pinecone-key>
@@ -77,7 +77,6 @@ To set up the project on your local machine:
     MISTRAL_API_KEY=<your-mistral-api-key>
     AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=<your-azure-endpoint>
     AZURE_DOCUMENT_INTELLIGENCE_APIKEY=<your-azure-api-key>
-    CLAUDE_API_KEY=<your-claude-api-key>
     ```
 
 7. Run the backend:
@@ -107,20 +106,10 @@ To set up the project on your local machine:
     npm run dev:admin
     ```
 
-### Frontend Routing
-
-The client app's routes:
-
-- `/`: Home page
-- `/chat/:agent_id`: Conversation page to interact with the chatbot
-- `/chat`: General conversation page
-- `/actions`: Code editor for managing action-based tasks
-
 The admin app's routes:
 
 - `/`: Admin homepage
 
-## How to Use
 
 ### End User (Deployed Version)
 
@@ -130,27 +119,9 @@ The admin app's routes:
 
 ### Admin (Deployed Version)
 
-1. Visit the admin panel of the deployed Nexaflow app.
+1. Visit the admin panel of the deployed Nexaflow app - [Admin Panel](https://admin.nexaflow.co/).
 2. Manage actions and documents by adding new workflows or updating the knowledge base.
 
-## Contribution
-
-We welcome contributions to Nexaflow! Follow the instructions below to set up a development environment:
-
-1. Fork this repository.
-2. Create a new branch:
-    ```bash
-    git checkout -b feature/your-feature
-    ```
-3. Make your changes.
-4. Commit your changes:
-    ```bash
-    git commit -m "Add feature"
-    ```
-5. Push the changes to your branch:
-    ```bash
-    git push origin feature/your-feature
-    ```
-6. Open a pull request, and we will review your changes.
-
-## Team Nexus Squad
+---
+## Team - Nexus Squad
+---
