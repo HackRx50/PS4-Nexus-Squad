@@ -136,6 +136,7 @@ function ChatPanel() {
       return;
     }
 
+    setLLMResponseLoading(true);
     if (!session_id) {
       const newSessionID = createId();
       await createNewSession(newSessionID, inputText);
@@ -144,7 +145,6 @@ function ChatPanel() {
 
     if (inputText.trim()) {
       setInputText('');
-      setLLMResponseLoading(true);
 
       try {
         const userMessage = { query: inputText };
@@ -172,11 +172,12 @@ function ChatPanel() {
         });
         if (response.ok) {
           const data: Message[] = await response.json();
-          data.forEach((message) => {
-            if (message.content && message.type !== 'tool') {
-              dispatch(setSessionMessage({ sessionId: session_id!, message }));
+          dispatch(setSessionMessages(
+            {
+              sessionId: session_id,
+              messages: data.filter((message) => message.type !== 'tool' && message.content != '')
             }
-          });
+          ))
         } else if (response.status === 403) {
           const data = await response.json();
           toast({
@@ -204,6 +205,8 @@ function ChatPanel() {
       } finally {
         setLLMResponseLoading(false);
       }
+    } else {
+      setLLMResponseLoading(false);
     }
   };
 
@@ -356,7 +359,7 @@ function ChatPanel() {
                     <div className="px-4">
                       <ReactMarkdown
                         components={{
-                          code({ inline, className, children, ...props }) {
+                          code({ inline, className, children, ...props }: any) {
                             const match = /language-(\w+)/.exec(
                               className || ''
                             );
@@ -447,11 +450,16 @@ function ChatPanel() {
               onKeyDown={handleKeyDown}
             />
             <Button
-              disabled={llmResponseLoading}
+              disabled={llmResponseLoading || !inputText.trim()}
               size="icon"
               onClick={handleSendMessage}
             >
-              <ArrowRight className="h-4 w-4" />
+              {llmResponseLoading ? (
+                <Loader2
+                  className={`transition-transform duration-300 animate-spin`} />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>

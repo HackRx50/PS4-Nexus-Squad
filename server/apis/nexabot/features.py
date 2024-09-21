@@ -175,18 +175,11 @@ class SessionManager:
         if ENVIRONMENT == "production":
             result = nexabot.invoke(session_messages)
             session_messages.pop()
-            # session_messages = result["messages"]
-            last_three_response = result["messages"][-4:]
+            query = HumanMessage(content=message)
+            session_messages.append(query)
 
-            for message in last_three_response:
-                if isinstance(message, AIMessage):
-                    if not message.content:
-                        continue
-                    session_messages.append(message)
-                elif isinstance(message, HumanMessage):
-                    session_messages.append(message)
-            
-            return (result["messages"][-1].content, last_three_response)
+            self.sessions_messages[session.cid] = session_messages
+            return (result["messages"][-1].content, session_messages)
         else:
             from apis.sample import sampleInvoke
             session_messages.pop()
