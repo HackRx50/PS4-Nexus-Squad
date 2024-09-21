@@ -1,5 +1,7 @@
 # Nexaflow - Context-Aware Chatbot
 
+## Team Nexus Squad
+
 ## Overview
 
 Nexaflow is an intelligent, context-aware chatbot designed to provide precise and useful information from a comprehensive knowledge base while executing various actions through integrated APIs. The chatbot can handle multiple document formats, preserve conversation context, and execute actions like creating/canceling orders, collecting payments, and more.
@@ -16,7 +18,7 @@ Nexaflow was built as part of a hackathon challenge to solve real-world problems
 
 ## Tech Stack
 
-- **Frontend**: React (built using ShadCN UI library).
+- **Frontend**: React (built using ShadCN UI library), Firebase.
 - **Backend**: Python and FastAPI, with additional integrations for document parsing and external API management.
 
 ## Installation & Setup (For Developers)
@@ -35,7 +37,7 @@ To set up the project on your local machine:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/<your-repo>/nexaflow.git
+    git clone https://github.com/nexsussquad/nexaflow
     cd nexaflow
     ```
 
@@ -151,7 +153,4 @@ We welcome contributions to Nexaflow! Follow the instructions below to set up a 
     ```
 6. Open a pull request, and we will review your changes.
 
-## License
-
-Nexaflow is released under the [MIT License](LICENSE).
-
+## Team Nexus Squad
