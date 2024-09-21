@@ -113,7 +113,7 @@ The admin app's routes:
 
 ### End User (Deployed Version)
 
-1. Visit the deployed Nexaflow app.
+1. Visit the deployed Nexaflow app - [Nexaflow](https://www.nexaflow.co).
 2. On the homepage, interact with the chatbot for any FAQs or context-aware queries.
 3. If you want to perform an action (e.g., cancel an appointment), simply ask the bot, and it will handle it via integrated APIs.
 
