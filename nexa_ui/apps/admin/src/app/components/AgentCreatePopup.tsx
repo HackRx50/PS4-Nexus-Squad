@@ -92,13 +92,13 @@ export default function AgentCreatePopup() {
             description,
           }),
         });
-
+        
         const data: { message: string; agent: Agent } = await response.json();
         setOpenStatus(false);
-
+        
         const agents = await getAgents();
         dispatch(setAgents(agents));
-
+        
         toast({
           title: data.message,
           duration: 3000,
@@ -108,6 +108,7 @@ export default function AgentCreatePopup() {
         setError('Agent name is not available.');
         setSubmitCount(submitCount + 1);
       }
+      setAgentCreationLoading(false);
     } catch (error) {
       setAgentCreationLoading(false);
       toast({
@@ -115,6 +116,8 @@ export default function AgentCreatePopup() {
         description: error as string,
         duration: 3000,
       });
+    } finally {
+      setAgentCreationLoading(false);
     }
   }
 
