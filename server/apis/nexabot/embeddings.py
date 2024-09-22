@@ -4,7 +4,8 @@ import time
 from fastapi import HTTPException
 
 from pinecone import Pinecone, ServerlessSpec
-from langchain_mistralai.embeddings import MistralAIEmbeddings
+# from langchain_mistralai.embeddings import MistralAIEmbeddings
+from langchain_cohere import CohereEmbeddings
 from langchain_pinecone import PineconeVectorStore
 import cuid
 
@@ -38,7 +39,6 @@ supported_extensions = [
 
 def load_documents(filepath: str):
     ext = filepath.split(".")[-1].lower()
-
     if ext == "txt":
         return load_text_documents(filepath)
     elif ext == "md":
@@ -72,7 +72,8 @@ def get_vector_store(agent_name: str) -> PineconeVectorStore:
 
     pc = Pinecone(api_key=pinecone_api_key)
 
-    embedding_model = MistralAIEmbeddings(model="mistral-embed")
+    # embedding_model = MistralAIEmbeddings(model="mistral-embed")
+    embedding_model = CohereEmbeddings(model="embed-english-v3.0")
     existing_indexes = [index_info["name"] for index_info in pc.list_indexes()]
 
     if PINECONE_INDEX_NAME not in existing_indexes:

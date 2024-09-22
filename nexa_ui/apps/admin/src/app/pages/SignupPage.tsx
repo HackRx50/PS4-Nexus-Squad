@@ -79,7 +79,7 @@ const SignupPage = () => {
               <div className="mb-4">
                 <Input
                   type="text"
-                  placeholder="Username"
+                  placeholder="Fullname"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required

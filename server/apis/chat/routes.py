@@ -113,13 +113,15 @@ async def talk_session(session_id: str, request: Request):
         session, nexabot = session_manager.handle_session(
             session_id, agent_name, user_id=user_id
         )
-        ai_message, response = session_manager.talk(session, nexabot, data["query"])
-        result = [message.__dict__ for message in response]
-        session_manager.save_session(session.cid)
+        if not data['query']:
+            raise HTTPException(status_code=400, detail={ "detail": "Query is required" })
+        process_stream = session_manager.talk(session, nexabot, data["query"])
         User.decrease_available_limit(user_id)
-        return result
+        return StreamingResponse(process_stream, media_type="text/plain")
     except:
         raise HTTPException(status_code=500, detail="Something Went wrong")
+    finally:
+        session_manager.save_session(session.cid)
 
 
 @chat_router.delete("/{session_id}")
