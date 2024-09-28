@@ -10,9 +10,9 @@ import {
 } from '@nexa_ui/shared';
 import { Button } from '@nexa_ui/shared';
 import { ScrollArea } from '@nexa_ui/shared';
-import { Edit, Trash2, Upload, Terminal } from 'lucide-react';
+import { Edit, Trash2, Upload, Terminal, ArrowLeftCircle } from 'lucide-react';
 import { Action, DocumentMetaData } from '../types';
-import { useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { BASE_URL, appFetch, getActions, getDocuments } from '../utility';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { addActions, addDocumentMetaData } from '../store';
@@ -188,6 +188,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { agent_name } = useParams();
+  const navigate = useNavigate();
 
   const user = useAppSelector((state) => state.userReducer.user);
   const actionsMap = useAppSelector((state) => state.actionsSlice.actions);
@@ -225,7 +226,12 @@ const ActionsList: React.FC<ActionsListProps> = ({
     <Card className="w-1/3 mr-4 flex flex-col">
       <CardHeader className="flex flex-col space-y-1.5">
         <CardTitle className="text-2xl font-bold pb-4 capitalize">
-          Nexaflow: {agent_name}
+          <div className='flex items-center'>
+            <Button variant={'ghost'} onClick={() => navigate(-1)}>
+              <ArrowLeftCircle />
+            </Button>
+            <h1>Nexaflow: {agent_name}</h1>
+          </div>
         </CardTitle>
         {/* <p className="text-sm font-medium text-muted-foreground">
         Previous Actions
