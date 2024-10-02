@@ -15,7 +15,7 @@ type ToggleOption = 'action' | 'documents';
 
 const AgentsPage: React.FC = () => {
   // action maker
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState('# Enter your Python code here');
   const [language, setLanguage] = useState('python');
   const [actionTitle, setActionTitle] = useState('');
   const [requirements, setRequirements] = useState('requests');

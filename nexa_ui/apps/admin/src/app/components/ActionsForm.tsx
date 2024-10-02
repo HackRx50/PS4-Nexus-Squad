@@ -10,11 +10,7 @@ import { Copy, Sun, Moon, Upload, Files } from 'lucide-react';
 import { Input } from '@nexa_ui/shared';
 import { lazy, Suspense } from 'react';
 import { Label } from '@nexa_ui/shared';
-const CodeEditor = lazy(() =>
-  import('@uiw/react-textarea-code-editor').then((mod) => ({
-    default: mod.default,
-  }))
-);
+
 import { Card, CardContent, CardHeader, CardTitle } from '@nexa_ui/shared';
 import { Button } from '@nexa_ui/shared';
 import { useTheme } from './theme-provider';
@@ -25,8 +21,8 @@ import { useParams } from 'react-router-dom';
 import { useAppDispatch } from '../hooks';
 import { addActions, addDocumentMetaData } from '../store';
 import { appFetch } from '../utility';
-import { useAuth } from '../contexts/AuthContext';
 import Loading from './Loading';
+import { Editor } from '@monaco-editor/react';
 
 interface ActionFormProps {
   code: string;
@@ -104,9 +100,9 @@ function ActionsForm({
   const [draggedOver, setDraggedOver] = useState(false);
 
   const [actionSubmissionLoading, setActionSubmissionLoading] = useState(false);
-  
+
   const [uploading, setUploading] = useState(false);
-  
+
   const [error, setError] = useState<string | null>(null);
   const { agent_name } = useParams();
   const dispatch = useAppDispatch();
@@ -244,15 +240,15 @@ function ActionsForm({
         variant: 'default',
         duration: 5000,
       });
-  
+
       const actions = await getActions(agent_name!);
       dispatch(addActions({ agent_name: agent_name!, actions }));
-  
+
       setActionTitle('');
       setCode('# Enter your Python code here');
       setRequirements('');
       setActionSubmissionLoading(false);
-    } catch(err) {
+    } catch (err) {
       toast({
         title: 'Action Creation Error',
         description: `${err}`,
@@ -293,7 +289,6 @@ function ActionsForm({
 
       if (supportedExtensions.includes(fileExtension)) {
         setSelectedFile(file);
-        // setError(null);
       } else {
         setSelectedFile(null);
       }
@@ -352,9 +347,8 @@ function ActionsForm({
 
       toast({
         title: message,
-        description: `Document with id is ${
-          (documentMetaData as DocumentMetaData).did
-        }`,
+        description: `Document with id is ${(documentMetaData as DocumentMetaData).did
+          }`,
         variant: 'default',
         duration: 3000,
       });
@@ -368,8 +362,8 @@ function ActionsForm({
 
   return (
     <>
-      {uploading ? <Loading message='Uploading...'/> : ''}
-      {actionSubmissionLoading ? <Loading message='Creating...'/> : ''}
+      {uploading ? <Loading message='Uploading...' /> : ''}
+      {actionSubmissionLoading ? <Loading message='Creating...' /> : ''}
       <Card className={`w-2/3 flex flex-col`}>
         <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
           <CardTitle>
@@ -437,22 +431,8 @@ function ActionsForm({
               )}
             </div>
             <Suspense fallback={<div>Loading editor...</div>}>
-              <div className="flex-grow overflow-auto">
-                <CodeEditor
-                  value={code}
-                  language={language}
-                  placeholder="Please enter code."
-                  onChange={(evn) => setCode(evn.target.value)}
-                  padding={15}
-                  style={{
-                    fontSize: 14,
-                    backgroundColor: 'var(--background)',
-                    fontFamily:
-                      'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
-                    minHeight: '100%', // Changed from height to minHeight
-                  }}
-                  className="border rounded-md w-full"
-                />
+              <div className="flex-grow overflow-hidden">
+                <Editor className='border rounded-md w-full' theme={theme === "dark" ? "vs-dark" : "light"} value={code} language='python' onChange={(v) => setCode(v || "")} options={{ minimap: { enabled: false } }} />
               </div>
             </Suspense>
             <Button
@@ -485,22 +465,20 @@ function ActionsForm({
                 {draggedOver ? (
                   <>
                     <Files
-                      className={`transition-transform duration-500 ease-in-out transform ${
-                        draggedOver
+                      className={`transition-transform duration-500 ease-in-out transform ${draggedOver
                           ? 'scale-150 text-blue-400'
                           : 'scale-200 text-gray-500'
-                      }`}
+                        }`}
                     />
                     <div>Drop file Here</div>
                   </>
                 ) : (
                   <>
                     <Upload
-                      className={`transition-transform duration-500 ease-in-out transform ${
-                        draggedOver
+                      className={`transition-transform duration-500 ease-in-out transform ${draggedOver
                           ? 'scale-150 text-blue-500'
                           : 'scale-100 text-gray-500'
-                      }`}
+                        }`}
                     />
                     Upload
                   </>
