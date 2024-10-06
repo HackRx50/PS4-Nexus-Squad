@@ -10,7 +10,7 @@ import {
 } from '@nexa_ui/shared';
 import { Button } from '@nexa_ui/shared';
 import { ScrollArea } from '@nexa_ui/shared';
-import { Edit, Trash2, Upload, Terminal, ArrowLeftCircle } from 'lucide-react';
+import { Edit, Trash2, Upload, Terminal, ArrowLeftCircle, ScanEyeIcon, LucideEye } from 'lucide-react';
 import { Action, DocumentMetaData } from '../types';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { BASE_URL, appFetch, getActions, getDocuments } from '../utility';
@@ -22,19 +22,22 @@ type ToggleOption = 'action' | 'documents';
 interface ActionsListProps {
   selectedToggle: string;
   handleToggle: (option: ToggleOption) => void;
+  OnPreviewAction: (action: Action) => void;
 }
 
 function ActionCard({
   action,
   actions,
+  onPreview,
 }: {
   action: Action;
   actions: Action[];
+  onPreview: (action: Action) => void;
 }) {
   const { toast } = useToast();
   const { agent_name } = useParams();
   const dispatch = useAppDispatch();
-  const [deleting, setDeleting] = useState(false)
+  const [deleting, setDeleting] = useState(false);
 
   const handleDeleteAction = async (id: string) => {
     try {
@@ -76,8 +79,8 @@ function ActionCard({
           {action.title}
         </CardTitle>
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="hidden">
-            <Edit className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="" onClick={() => onPreview(action)}>
+            <LucideEye className="h-4 w-4" />
           </Button>
           <Button
             variant="destructive"
@@ -185,6 +188,7 @@ function DocumentCard({
 const ActionsList: React.FC<ActionsListProps> = ({
   handleToggle,
   selectedToggle,
+  OnPreviewAction
 }) => {
   const dispatch = useAppDispatch();
   const { agent_name } = useParams();
@@ -259,7 +263,7 @@ const ActionsList: React.FC<ActionsListProps> = ({
         <ScrollArea className="h-full">
           {selectedToggle === 'action'
             ? actions.map((action) => (
-                <ActionCard key={action.aid} action={action} actions={actions} />
+                <ActionCard key={action.aid} action={action} actions={actions} onPreview={OnPreviewAction} />
               ))
             : documents.map((document) => (
                 <DocumentCard key={document.did} document={document} documents={documents} />
