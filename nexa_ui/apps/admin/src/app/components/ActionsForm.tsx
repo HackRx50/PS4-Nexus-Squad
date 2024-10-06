@@ -395,6 +395,7 @@ function ActionsForm({
                 <Input
                   id="action-title"
                   value={actionTitle}
+                  required={true}
                   onChange={(e) => setActionTitle(e.target.value)}
                   placeholder="Enter action title"
                 />
@@ -436,7 +437,7 @@ function ActionsForm({
               </div>
             </Suspense>
             <Button
-              onClick={editingAction ? handleEdit : handleCreateAction}
+              onClick={handleCreateAction}
               className="w-full mt-4"
               disabled={actionSubmissionLoading}
             >

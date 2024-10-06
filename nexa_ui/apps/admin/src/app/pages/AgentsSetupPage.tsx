@@ -58,10 +58,19 @@ const AgentsPage: React.FC = () => {
     }
   }, [user, agent_name]);
 
+
+  function OnPreview(action: Action) {
+    setCode(action.code);
+    setLanguage(action.language);
+    setActionTitle(action.title);
+    setEditingAction(action);
+  }
+
   return (
     <AgentDashBoardGurad>
       <div className="flex h-screen">
         <ActionsList
+          OnPreviewAction={OnPreview}
           handleToggle={handleToggle}
           selectedToggle={selectedToggle}
         />
