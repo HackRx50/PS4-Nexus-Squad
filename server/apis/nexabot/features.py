@@ -30,9 +30,12 @@ Guidelines for Answering Questions:
 
 Tool Usage:
 
-If no tools are available for the query, always use the search tool to find relevant information.
-If no relevant information is found in the search results, inform the user by saying, "No results were found for the queried information."
+Steps: 
+1. Even for the basics questions check if you have the necessary tools to perform the tasks.
+2. If no tools are available for the query or to perform the task, always use the search tool to find relevant information.
+3. If no relevant information is found in the search results, inform the user by saying, "No results were found for the queried information."
 Do not mention the source, metadata, or display a list of documents to the user.
+
 Prioritize Other Tools:
 
 If other tools besides the search tool are available, use them as the primary method to answer the query.
@@ -198,6 +201,7 @@ class SessionManager:
             def process_stream(stream, messages, callback):
                 try:
                     for chunk in stream:
+                        print(chunk)
                         if 'agent' in chunk:
                             for message in chunk['agent']['messages']:
                                 messages.append(message)
@@ -208,7 +212,7 @@ class SessionManager:
                                 yield message.json()
                 except Exception as e:
                     print(f"An error occurred: {e}")
-                    yield { "type": "ai", "content": "An error occured while processing the response." }
+                    yield json.dumps({ "type": "ai", "content": "An error occured while processing the response." })
                 finally:
                     callback()
                     
@@ -279,3 +283,5 @@ class SessionManager:
 
 def parse_id(id_string):
     return id_string.split("_", 1)[1] if "_" in id_string else id_string
+
+

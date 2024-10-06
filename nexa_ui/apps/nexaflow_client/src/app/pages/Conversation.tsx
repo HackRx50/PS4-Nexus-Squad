@@ -171,7 +171,7 @@ function ChatPanel() {
           accessToken: accessToken!,
           body: JSON.stringify(userMessage),
         });
-        console.log(response.status)
+
 
         if (response.ok) {
           const reader = response.body!.getReader();
@@ -180,7 +180,6 @@ function ChatPanel() {
             const { done, value } = await reader.read();
             if (done) break;
             const decodedValue = decoder.decode(value);
-            console.log(decodedValue);
             dispatch(
               setSessionMessage({ sessionId: session_id, message: JSON.parse(decodedValue) })
             );
@@ -296,10 +295,6 @@ function ChatPanel() {
     }
     setIsRightSidebarOpen(!isRightSidebarOpen);
   };
-
-  useEffect(() => {
-    console.log("Right Side bar open:", isRightSidebarOpen);
-  }, [isRightSidebarOpen])
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">

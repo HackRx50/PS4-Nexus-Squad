@@ -19,3 +19,4 @@ alembic
 firebase-admin
 langchain-pinecone
 langchain-mistralai
+langchain_cohere
