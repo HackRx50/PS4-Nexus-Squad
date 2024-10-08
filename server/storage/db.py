@@ -8,7 +8,7 @@ load_dotenv()
 database_url = os.getenv("POSTGRESQL_URL")
 
 if not database_url:
-        raise Exception("POSTGRESQL_URL environment variable is not set.")
+    raise Exception("POSTGRESQL_URL environment variable is not set.")
     
 
 engine = create_engine(

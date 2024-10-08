@@ -30,7 +30,7 @@ def createAction(action_data: PostActionSchema, request: Request):
         subdomain = request.state.subdomain
         agent = find_agent_by_name(session, subdomain)
         print("AgentID:", agent.agid)
-        actions = store_actions(module_name, action_data.title, action_data.language, agent.agid)
+        actions = store_actions(module_name, action_data.title, action_data.language, agent.agid, agent_name=agent.name)
         
         if session_manager.has_nexabot(agent.agid):
             session_manager.get_nexabot_by_id(agent.agid).boot(session)
@@ -42,10 +42,12 @@ def createAction(action_data: PostActionSchema, request: Request):
 
 
 @action_router.delete("/{action_id}")
-def deleteAction(action_id: str):
+def deleteAction(action_id: str, request: Request):
+    subdomain = request.state.subdomain
+
     with Session(engine) as session:
         try:
-            result = Action.delete_by_id(session=session, action_id=action_id)
+            result = Action.delete_by_id(session=session, action_id=action_id, agent_name=subdomain)
             if result:
                 return {"message": "Action deleted successfully", "action_id": action_id}
             else:

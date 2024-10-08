@@ -21,34 +21,8 @@ from storage.utils import (
 )
 
 from .embeddings import get_vector_store
+from settings import SYSTEM_MESSAGE_CONTENT
 
-systemMessageContent = """
-
-You are Nexabot, a helpful AI Assistant. Your task is to help users execute tasks and query data for relevant information, converting it into an easily understandable format.
-
-Guidelines for Answering Questions:
-
-Tool Usage:
-
-Steps: 
-1. Even for the basics questions check if you have the necessary tools to perform the tasks.
-2. If no tools are available for the query or to perform the task, always use the search tool to find relevant information.
-3. If no relevant information is found in the search results, inform the user by saying, "No results were found for the queried information."
-Do not mention the source, metadata, or display a list of documents to the user.
-
-Prioritize Other Tools:
-
-If other tools besides the search tool are available, use them as the primary method to answer the query.
-Response Style:
-
-Always simplify complex information into easy-to-understand language.
-Only provide information that is directly relevant to the user's query.
-Do not share unnecessary details about internal processes or tool outputs.
-Fallback:
-
-If you are unable to generate a suitable response, inform the user with: "I'm unable to find the relevant information at the moment."
-
-"""
 
 
 def get_vector_tool(agent_name: str):
@@ -77,6 +51,7 @@ class NexaBot:
             )
             tools_ns = {}
             for action in actions:
+                print(action)
                 try:
                     exec(action.code, globals(), tools_ns)
                     if not action.function_name:
@@ -93,9 +68,12 @@ class NexaBot:
             print("\n\nBooting LLM...")
             llm = ChatCohere(model_name=MISTRAL_MODEL_TYPE)
             # llm = ChatMistralAI(model_name=MISTRAL_MODEL_TYPE)
+
             if not self.llm:
                 self.llm = llm
+                
             self.chatBot = create_react_agent(self.llm, self.tools)
+            
             print("LLM booting Successfull")
             db_session.commit()
             return True
@@ -103,7 +81,7 @@ class NexaBot:
             return False
 
     def stream(self, messages: List):
-        return self.chatBot.stream({"messages": [SystemMessage(content=systemMessageContent), *messages]})
+        return self.chatBot.stream({"messages": [SystemMessage(content=SYSTEM_MESSAGE_CONTENT), *messages]})
 
     @classmethod
     def create(self, agent_id: str, llm=None):
@@ -201,6 +179,7 @@ class SessionManager:
             def process_stream(stream, messages, callback):
                 try:
                     for chunk in stream:
+
                         print(chunk)
                         if 'agent' in chunk:
                             for message in chunk['agent']['messages']:

@@ -11,6 +11,8 @@ from storage.models import ChatSession, User, UserAPIKey
 from storage.db import Session, engine
 from storage.utils import find_agent_by_name
 
+from apis.nexabot.guardrails import can_perform, check_approval
+
 
 chat_router = APIRouter(prefix="/chat")
 
@@ -113,11 +115,24 @@ async def talk_session(session_id: str, request: Request):
         session, nexabot = session_manager.handle_session(
             session_id, agent_name, user_id=user_id
         )
-        if not data['query']:
+
+        user_query = data['query']
+
+        if not user_query:
             raise HTTPException(status_code=400, detail={ "detail": "Query is required" })
-        process_stream = session_manager.talk(session, nexabot, data["query"])
-        User.decrease_available_limit(user_id)
-        return StreamingResponse(process_stream, media_type="text/plain")
+        
+        can_perform_result = can_perform(user_query, agent_name)
+
+        if len(can_perform_result) > 0:
+            approval_result = check_approval(user_query, can_perform_result[0])
+            if approval_result['status'] == 'Approved':
+                process_stream = session_manager.talk(session, nexabot, user_query)
+                User.decrease_available_limit(user_id)
+                return StreamingResponse(process_stream, media_type="text/plain")
+            elif approval_result['status'] == "Disapproved":
+                return { "type": "ai", "content": approval_result["message"] }
+            
+        return { "type": "ai", "content": "Have to do something else" }
     except:
         raise HTTPException(status_code=500, detail="Something Went wrong")
     finally:

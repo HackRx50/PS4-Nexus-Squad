@@ -6,6 +6,8 @@ from storage.models import Agent, AccessLevel
 from .schemas import PostAgentSchema, CheckAgentSchema, ChangeAgentSchema
 from .utils import canUseName
 
+from apis.nexabot.embeddings import save_action_description
+
 agent_router = APIRouter(prefix="/agents")
 
 
@@ -49,6 +51,9 @@ def createAgent(data: PostAgentSchema, request: Request):
     user_id = request.state.user_id
     print(data)
     if canUseName(data.name):
+        save_action_description("""
+        Search the database for the given query
+        """, data.name)
         new_agent = Agent.create(data.name, owner=user_id, access=data.type, description=data.description)
         return { "message": "Agent Created Successfully", "agent": new_agent}
     raise HTTPException(401, "Already Used By other person")
