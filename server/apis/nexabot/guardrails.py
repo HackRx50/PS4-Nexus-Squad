@@ -21,8 +21,8 @@ def check_approval(query: str, doc: Document):
         f'''
         Description: {doc.page_content}
         
-        If the query matches the description, respond with a valid JSON containing two keys: "status" ("Approved")
-        If the query does not match the description, respond with a valid JSON containing two keys: "status" ("Disapproved") and "message" short reason for disapproval.
+        If the query matches the description, respond with a valid JSON containing just one key: "status" with the value "Approved".
+        If the query does not match the description, respond with a valid JSON containing two keys: "status" with the value "Disapproved" and "message" with a short reason for disapproval.
         {{query}}
         '''
     )

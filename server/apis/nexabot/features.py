@@ -183,8 +183,9 @@ class SessionManager:
                         print(chunk)
                         if 'agent' in chunk:
                             for message in chunk['agent']['messages']:
-                                messages.append(message)
-                                yield message.json()
+                                msg = json.dumps({ "type": message.type, "content": message.content, "success": True })
+                                messages.append(msg)
+                                yield msg
                         if 'tools' in chunk:
                             for message in chunk['tools']['messages']:
                                 messages.append(message)
