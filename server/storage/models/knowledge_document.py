@@ -62,8 +62,7 @@ class KnowledgeDocument(Base):
                 else:
                     return False
             except SQLAlchemyError as e:
-                session.rollback()  # Roll back the session in case of error
-                # Log the error or handle it as needed
+                session.rollback()
                 print(f"An error occurred: {e}")
                 return False
 
@@ -76,6 +75,8 @@ class KnowledgeDocument(Base):
                 document.type = type
                 document.agent = agent_id
                 document.vector_ids = ids
+                if owner_id:
+                    document.owner = owner_id
                 session.add(document)
                 session.commit()
                 session.refresh(document)

@@ -11,6 +11,14 @@ from storage.models import ChatSession, User, UserAPIKey
 from storage.db import Session, engine
 from storage.utils import find_agent_by_name
 
+from apis.nexabot.guardrails import can_perform, check_approval
+
+from langchain_cohere import ChatCohere
+
+from langchain_community.docstore.document import Document
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.output_parsers.json import SimpleJsonOutputParser
+
 
 chat_router = APIRouter(prefix="/chat")
 
@@ -103,25 +111,48 @@ def getChatSessions(request: Request):
 async def talk_session(session_id: str, request: Request):
     try:
         agent_name = request.state.subdomain
-        user_id = None
-        data = await request.json()
-        if hasattr(request.state, "user_id"):
-            user_id = request.state.user_id
-        if hasattr(request.state, "userKey"):
-            userKey = request.state.userKey
+        
+        user_id = getattr(request.state, "user_id", None)
+        userKey = getattr(request.state, "userKey", None)
+
+        if userKey:
             UserAPIKey.increase_use_count(user_id, userKey)
-        session, nexabot = session_manager.handle_session(
-            session_id, agent_name, user_id=user_id
-        )
-        if not data['query']:
-            raise HTTPException(status_code=400, detail={ "detail": "Query is required" })
-        process_stream = session_manager.talk(session, nexabot, data["query"])
-        User.decrease_available_limit(user_id)
-        return StreamingResponse(process_stream, media_type="text/plain")
-    except:
-        raise HTTPException(status_code=500, detail="Something Went wrong")
+
+        session, nexabot = session_manager.handle_session(session_id, agent_name, user_id=user_id)
+
+        data = await request.json()
+        user_query = data.get('query')
+
+        if not user_query:
+            raise HTTPException(status_code=400, detail={"detail": "Query is required"})
+
+        can_perform_result = can_perform(user_query, agent_name)
+        if can_perform_result:
+
+            approval_result = check_approval(user_query, can_perform_result[0])
+
+            if approval_result['status'] == 'Approved':
+                process_stream = session_manager.talk(session, nexabot, user_query)
+                User.decrease_available_limit(user_id)
+                return StreamingResponse(process_stream, media_type="text/plain")
+
+            elif approval_result['status'] == "Disapproved":
+                session_manager.sessions_messages[session.cid].append({ "type": "human", "content": user_query })
+                ai_message = {"type": "ai", "content": approval_result["message"], "success": False}
+                session_manager.sessions_messages[session.cid].append(ai_message)
+                return ai_message
+        
+        ai_message = {"type": "ai", "content": "Something went wrong", "success": False}
+        session_manager.sessions_messages[session.cid].append(ai_message)
+        return ai_message
+    
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        raise HTTPException(status_code=500, detail="Something went wrong")
+    
     finally:
         session_manager.save_session(session.cid)
+
 
 
 @chat_router.delete("/{session_id}")
