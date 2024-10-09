@@ -183,16 +183,15 @@ class SessionManager:
                         print(chunk)
                         if 'agent' in chunk:
                             for message in chunk['agent']['messages']:
-                                msg = json.dumps({ "type": message.type, "content": message.content, "success": True })
-                                messages.append(msg)
-                                yield msg
+                                messages.append(message)
+                                yield message.json()
                         if 'tools' in chunk:
                             for message in chunk['tools']['messages']:
                                 messages.append(message)
                                 yield message.json()
                 except Exception as e:
                     print(f"An error occurred: {e}")
-                    yield json.dumps({ "type": "ai", "content": "An error occured while processing the response." })
+                    yield json.dumps({ "type": "ai", "content": "An error occured while processing the response.", "success": False })
                 finally:
                     callback()
                     
@@ -233,11 +232,14 @@ class SessionManager:
         if session_id in self.sessions_messages:
             transpiled_messages = []
             for message in self.sessions_messages[session_id]:
-                transpiled_messages.append(json.loads(message.json()))
+                if isinstance(message, dict):
+                    transpiled_messages.append(message)
+                else:
+                    transpiled_messages.append(json.loads(message.json()))
             return transpiled_messages
 
     def load_session_messages(self, session: ChatSession):
-        if session.cid not in self.sessions_messages:
+        if session.cid not in self.sessions_messages: 
             session_messages = []
             for message in session.messages:
                 message
