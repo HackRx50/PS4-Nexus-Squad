@@ -8,8 +8,6 @@ from storage.db import engine
 
 from .base import Base
 
-from apis.nexabot.embeddings import get_action_vector_store
-
 
 class Action(Base):
     __tablename__ = "actions"
@@ -45,13 +43,9 @@ class Action(Base):
     
 
     @classmethod
-    def delete_by_id(cls, session: Session, action_id: str, agent_name: str):
+    def delete_by_id(cls, session: Session, action_id: str):
         action = session.query(Action).filter_by(aid=action_id).first()
         
-        if action.vector_ids:
-            vc_store = get_action_vector_store(agent_name)
-            vc_store.delete(action.vector_ids)
-
         if action:
             session.delete(action)
             session.commit()

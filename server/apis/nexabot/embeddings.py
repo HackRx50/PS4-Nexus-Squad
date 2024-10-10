@@ -23,7 +23,7 @@ from langchain_community.document_loaders import (
     TextLoader,
 )
 
-from settings import PINECONE_INDEX_NAME, PINECONE_ACTION_INDEX_NAME
+from settings import PINECONE_INDEX_NAME, PINECONE_ACTION_INDEX_NAME, PINECONE_SESSION_DOCUMENT_INDEX_NAME
 
 
 supported_extensions = [
@@ -66,12 +66,53 @@ def save_embeddings(filepath: str, agent_name: str):
     os.remove(filepath)
     return ids
 
+def save_session_document_embeddings(filepath: str, session_id: str):
+    is_supported(filepath)
+    vector_store = get_session_document_vector_store(session_id=session_id)
+    documents = load_documents(filepath)
+    cuids = generate_ids(len(documents))
+    ids = vector_store.add_documents(documents=documents, ids=cuids)
+    os.remove(filepath)
+    return ids
+
 
 def save_action_description(description: str, agent_id: str):
     vector_store = get_action_vector_store(agent_name=agent_id)
     cuids = generate_ids(1)
     ids = vector_store.add_documents([Document(page_content=description)], ids=cuids)
     return ids
+
+def get_session_document_vector_store(session_id: str) -> PineconeVectorStore:
+    pinecone_api_key = os.getenv("PINECONE_API_KEY")
+    if not pinecone_api_key:
+        raise ValueError("PINECONE_API_KEY is not set")
+
+    pc = Pinecone(api_key=pinecone_api_key)
+
+    # embedding_model = MistralAIEmbeddings(model="mistral-embed")
+    embedding_model = CohereEmbeddings(model="embed-english-v3.0")
+    existing_indexes = [index_info["name"] for index_info in pc.list_indexes()]
+
+    if PINECONE_SESSION_DOCUMENT_INDEX_NAME not in existing_indexes:
+        print("Index Not Found!")
+
+        print("Creating Index...")
+        pc.create_index(
+            name=PINECONE_SESSION_DOCUMENT_INDEX_NAME,
+            dimension=1024,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+        )
+
+    while not pc.describe_index(PINECONE_SESSION_DOCUMENT_INDEX_NAME).status["ready"]:
+        time.sleep(1)
+
+    index = pc.Index(PINECONE_SESSION_DOCUMENT_INDEX_NAME)
+    vector_store = PineconeVectorStore(
+        index=index, embedding=embedding_model, namespace=session_id
+    )
+    return vector_store
+
 
 def get_action_vector_store(agent_name: str) -> PineconeVectorStore:
     pinecone_api_key = os.getenv("PINECONE_API_KEY")

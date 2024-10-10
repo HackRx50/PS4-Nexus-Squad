@@ -1,6 +1,6 @@
 from pprint import pprint
 
-from fastapi import APIRouter, File, UploadFile, Request, HTTPException, Response
+from fastapi import APIRouter, File, UploadFile, Request, HTTPException
 from fastapi import status
 
 from apis.agents.utils import is_used_by_other

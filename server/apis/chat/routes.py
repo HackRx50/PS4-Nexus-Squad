@@ -3,21 +3,20 @@ import json
 import os
 
 from fastapi import APIRouter, Request, HTTPException, status
+from fastapi import APIRouter, File, UploadFile, Request, HTTPException
 from fastapi.responses import StreamingResponse
 import httpx
 
 from apis.chat_session import session_manager
-from storage.models import ChatSession, User, UserAPIKey
+from apis.documents.utils import temp_save_file
+from apis.agents.utils import is_used_by_other
+
+from apis.nexabot.guardrails import can_perform, check_approval, can_answer_from_docs
+from apis.nexabot.embeddings import save_session_document_embeddings
+
+from storage.models import ChatSession, User, UserAPIKey, KnowledgeDocument
 from storage.db import Session, engine
 from storage.utils import find_agent_by_name
-
-from apis.nexabot.guardrails import can_perform, check_approval
-
-from langchain_cohere import ChatCohere
-
-from langchain_community.docstore.document import Document
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.output_parsers.json import SimpleJsonOutputParser
 
 
 chat_router = APIRouter(prefix="/chat")
@@ -131,15 +130,24 @@ async def talk_session(session_id: str, request: Request):
 
             approval_result = check_approval(user_query, can_perform_result[0])
 
+            # Action Approval
             if approval_result['status'] == 'Approved':
                 process_stream = session_manager.talk(session, nexabot, user_query)
                 User.decrease_available_limit(user_id)
                 return StreamingResponse(process_stream, media_type="text/plain")
 
             elif approval_result['status'] == "Disapproved":
+
+                doc_approval = can_answer_from_docs(user_query, agent_name)
+                if doc_approval["status"] == "Approved":
+                    process_stream = session_manager.talk(session, nexabot, user_query)
+                    User.decrease_available_limit(user_id)
+                    return StreamingResponse(process_stream, media_type="text/plain")
+                
                 session_manager.sessions_messages[session.cid].append({ "type": "human", "content": user_query })
                 ai_message = {"type": "ai", "content": approval_result["message"], "success": False}
                 session_manager.sessions_messages[session.cid].append(ai_message)
+
                 return ai_message
         
         ai_message = {"type": "ai", "content": "Something went wrong", "success": False}
@@ -152,6 +160,32 @@ async def talk_session(session_id: str, request: Request):
     
     finally:
         session_manager.save_session(session.cid)
+
+
+@chat_router.post("/{session_id}/document")
+async def session_document_upload(session_id: str, request: Request, file: UploadFile = File()):
+    try:
+        subdomain = request.state.subdomain
+        user_id = getattr(request.state, "user_id", None)
+
+        with Session(engine) as session:
+            agent = find_agent_by_name(session=session, name=subdomain)
+            if is_used_by_other(subdomain):
+                file_path = await temp_save_file(file)
+                ids = save_session_document_embeddings(file_path, session_id)
+                document = KnowledgeDocument.create(name=file.filename, type=file.content_type, agent_id=agent.agid, ids=ids)
+                print(document.name)
+                session, _ = session_manager.handle_session(session_id, agent.name, user_id=user_id)
+                session.documents = session.documents
+                return {"message": "Document Uploaded Successfully", "data": document}
+            else:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agent not found")
+    except HTTPException as he:
+        print(he)
+        raise he
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
 
 
