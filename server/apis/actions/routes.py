@@ -6,6 +6,7 @@ from storage.models import Action
 from storage.utils import find_agent_by_name, get_actions_by_agent_name
 
 from apis.chat_session import session_manager
+from apis.nexabot.embeddings import get_action_vector_store
 
 from .utils import create_action_file, store_actions
 from .schemas import PostActionSchema, UpdateActionSchema
@@ -43,11 +44,15 @@ def createAction(action_data: PostActionSchema, request: Request):
 
 @action_router.delete("/{action_id}")
 def deleteAction(action_id: str, request: Request):
-    subdomain = request.state.subdomain
+    agent_name = request.state.subdomain
 
     with Session(engine) as session:
         try:
-            result = Action.delete_by_id(session=session, action_id=action_id, agent_name=subdomain)
+            action = session.query(Action).filter_by(aid=action_id).first()
+            if action.vector_ids:
+                vc_store = get_action_vector_store(agent_name)
+                vc_store.delete(action.vector_ids)
+            result = Action.delete_by_id(session=session, action_id=action_id)
             if result:
                 return {"message": "Action deleted successfully", "action_id": action_id}
             else:

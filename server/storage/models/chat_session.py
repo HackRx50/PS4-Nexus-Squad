@@ -14,7 +14,8 @@ class ChatSession(Base):
     owner = Column(
         "owner", String, default="cm0xu8fn70001nlpclah1myy9"
     )
-    messages = Column("messages", JSON, default=[])
+    messages = Column("messages", JSON, default=lambda: [])
+    documents = Column("documents", JSON, default=lambda: [])
     created_at = Column("created_at", TIMESTAMP, default=func.now())
     updated_at = Column(
         "updated_at", TIMESTAMP, default=func.now(), onupdate=func.now()

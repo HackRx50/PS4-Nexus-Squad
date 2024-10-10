@@ -9,4 +9,4 @@ from .knowledge_document import KnowledgeDocument
 
 target_metadata = Base.metadata
 
-__all__ = ["Action", "Base", "AccessLevel", "agent_user_association", "Agent", "ChatSession", "KnowledgeDocument", "ApplicationAPIKey", "User","target_metadata", UserAPIKey]
+__all__ = ["Action", "Base", "AccessLevel", "agent_user_association", "Agent", "ChatSession", "KnowledgeDocument", "ApplicationAPIKey", "User","target_metadata", "UserAPIKey"]

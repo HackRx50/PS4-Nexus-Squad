@@ -33,8 +33,50 @@ def check_approval(query: str, doc: Document):
 
     return result
 
-def check_available_docs(query: str, agent_name: str):
+def escape_quotes_and_braces(input_string):
+    import re
+    escaped_string = re.sub(r'(["\'{}])', r'\\\1', input_string)
+    return escaped_string
+
+def remove_quotes_and_braces(input_string):
+    import re
+    cleaned_string = re.sub(r'[\'"{}]', '', input_string)
+    return cleaned_string
+
+@execution_time
+def can_answer_from_docs(query: str, agent_name: str):
     vc_store = get_vector_store(agent_name)
-    results = vc_store.similarity_search_with_score(query)
-    return results
+    search_result = vc_store.similarity_search_with_relevance_scores(query)
+
+    pages = ""
+
+    for index, page in enumerate(search_result):
+        pages += f"""
+            Page {index}:
+
+            {remove_quotes_and_braces(page[0].page_content)}   
+
+            -----------------------------------------------------------------------------     
+        """
+
+    llm = ChatCohere()
+
+    promptAction1 = ChatPromptTemplate.from_template(
+        f"""
+        If the query can be answered from the below pages of different document, respond with a valid JSON containing just one key: "status" with the value "Approved" and not any other data or key.
+        If the query does not match the description, respond with a valid JSON containing two keys: "status" with the value "Disapproved".
+        
+        Query: {{query}}
+
+        Pages:
+
+        {pages}
+        """
+    )
+
+    chain  = promptAction1 | llm | SimpleJsonOutputParser()
+
+    result = chain.invoke({ "query": query })
+
+    return result
 
