@@ -8,6 +8,7 @@ export type Session = {
     title?:string
     created_at: string;
     messages?: Message[];
+    documents?: string[]
     owner: string;
     updated_at: string;
 }

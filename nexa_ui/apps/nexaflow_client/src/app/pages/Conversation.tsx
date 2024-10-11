@@ -2,7 +2,7 @@ import { useState, KeyboardEvent, useEffect, useRef } from 'react';
 import { Button, Toaster, useToast } from '@nexa_ui/shared';
 import { Textarea } from '@nexa_ui/shared';
 import { Card } from '@nexa_ui/shared';
-import { ArrowRight, Hammer, Loader2, Menu, Plus, X } from 'lucide-react';
+import { ArrowRight, Hammer, Loader2, Menu, Plus, PlusIcon, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Message, Session, ToolMessage } from '../types';
@@ -467,6 +467,9 @@ function ChatPanel() {
         </div>
         <div className="border-t p-4">
           <div className="flex items-end space-x-2">
+            <Button variant={"ghost"} className='h-full'>
+              <PlusIcon />
+            </Button>
             <Textarea
               ref={textareaRef}
               className="resize-none min-h-[40px] max-h-[400px]"
