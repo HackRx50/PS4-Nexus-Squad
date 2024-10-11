@@ -41,10 +41,10 @@ export async function appFetch(url: string, options: RequestInit & { agent_name?
         },
     };
     if (options.agent_name) {
-        url = BASE_URL`http://${options.agent_name}.localhost${url}`
+      url = BASE_URL`http://${options.agent_name}.localhost${url}`
     }
     else {
-        url = BASE_URL`${url}`
+      url = BASE_URL`${url}`
     }
     return fetch(url, updatedOptions);
 }

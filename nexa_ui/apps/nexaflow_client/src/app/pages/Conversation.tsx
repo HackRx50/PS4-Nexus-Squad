@@ -1,8 +1,18 @@
-import { useState, KeyboardEvent, useEffect, useRef } from 'react';
+import { useState, ChangeEvent, KeyboardEvent, useEffect, useRef } from 'react';
 import { Button, Toaster, useToast } from '@nexa_ui/shared';
 import { Textarea } from '@nexa_ui/shared';
 import { Card } from '@nexa_ui/shared';
-import { ArrowRight, Hammer, Loader2, Menu, Plus, PlusIcon, X } from 'lucide-react';
+import {
+  ArrowRight,
+  Hammer,
+  Menu,
+  Plus,
+  UploadIcon,
+  CheckIcon,
+  XIcon,
+  X,
+  Loader2,
+} from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Message, Session, ToolMessage } from '../types';
@@ -26,6 +36,10 @@ function ChatPanel() {
   const [llmResponseLoading, setLLMResponseLoading] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [innerWidth, setInnerWidth] = useState(window.innerWidth);
+  const [fileSelected, setFileSelected] = useState<File | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [fileuploadstatus, setfileuploadstatus] = useState(false);
 
   const accessToken = useAppSelector((state) => state.auth.accessToken);
   const sessions = useAppSelector((state) => state.sessionsSlice.sessions);
@@ -76,7 +90,8 @@ function ChatPanel() {
       if (sessions[index].messages)
         setMessages(
           sessions[index].messages.filter(
-            (message) => /^(human|ai)$/.test(message.type) && message.content != ''
+            (message) =>
+              /^(human|ai)$/.test(message.type) && message.content != ''
           )
         );
       else fetchSessionData(session_id);
@@ -125,6 +140,63 @@ function ChatPanel() {
     }
   };
 
+  const handleFileInputClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFileSelected(file);
+
+      const confirmUpload = window.confirm(
+        `Are you sure you want to upload this document: ${file.name}?`
+      );
+      if (confirmUpload) {
+        handleSendDocument(file);
+      }
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFileSelected(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSendDocument = async (file: File) => {
+    if (!file) return;
+
+    try {
+      setfileuploadstatus(true);
+      const formData = new FormData();
+      formData.append('document', file);
+
+      const response = await appFetch(`/api/v1/chat/${session_id}/document`, {
+        method: 'POST',
+        body: formData,
+        accessToken: accessToken
+      });
+
+      if (response.ok) {
+        console.log('Document uploaded successfully');
+        alert('Document uploaded successfully');
+        setFileSelected(null);
+      } else {
+        const data = await response.json();
+        alert(`Error uploading document: ${data.detail}`);
+      }
+    } catch (error) {
+      console.log('Error sending document:', error);
+      alert(`Error sending document: ${error}`);
+    } finally {
+      setfileuploadstatus(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!accessToken) {
       toast({
@@ -149,17 +221,20 @@ function ChatPanel() {
       try {
         const userMessage = { query: inputText };
 
-        dispatch(setSessionMessage({
-          sessionId: session_id, message: {
-            type: 'human',
-            id: '',
-            additional_kwargs: {},
-            content: userMessage.query,
-            example: true,
-            name: 'user',
-            response_metadata: {},
-          }
-        }));
+        dispatch(
+          setSessionMessage({
+            sessionId: session_id,
+            message: {
+              type: 'human',
+              id: '',
+              additional_kwargs: {},
+              content: userMessage.query,
+              example: true,
+              name: 'user',
+              response_metadata: {},
+            },
+          })
+        );
 
         if (messages.length < 2) {
           getTitle(session_id, inputText.trim())
@@ -172,7 +247,6 @@ function ChatPanel() {
           body: JSON.stringify(userMessage),
         });
 
-
         if (response.ok) {
           const reader = response.body!.getReader();
           const decoder = new TextDecoder();
@@ -181,7 +255,10 @@ function ChatPanel() {
             if (done) break;
             const decodedValue = decoder.decode(value);
             dispatch(
-              setSessionMessage({ sessionId: session_id, message: JSON.parse(decodedValue) })
+              setSessionMessage({
+                sessionId: session_id,
+                message: JSON.parse(decodedValue),
+              })
             );
           }
         } else if (response.status === 403) {
@@ -266,7 +343,7 @@ function ChatPanel() {
       }
       navigate(newSessionURL);
       return newSessionID;
-    } catch (error) { }
+    } catch (error) {}
   }
 
   async function onNewSessionButtonClick() {
@@ -300,15 +377,19 @@ function ChatPanel() {
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Left Sidebar */}
       <Card
-        className={`border-r md:flex md:flex-col ${window.innerWidth < 768
-          ? 'fixed top-0 left-0 h-full transition-transform duration-500 ease-in-out'
-          : (innerWidth < 1100 && innerWidth > 768 ? "w-[40%]" : "w-1/4")
-          } ${window.innerWidth < 768
+        className={`border-r md:flex md:flex-col ${
+          window.innerWidth < 768
+            ? 'fixed top-0 left-0 h-full transition-transform duration-500 ease-in-out'
+            : innerWidth < 1100 && innerWidth > 768
+            ? 'w-[40%]'
+            : 'w-1/4'
+        } ${
+          window.innerWidth < 768
             ? showSidebar
               ? 'translate-x-0 w-full z-50'
               : '-translate-x-full w-96'
             : ''
-          }`}
+        }`}
       >
         <div className="p-4 flex justify-between items-center">
           <h2 className="text-lg font-semibold">Nexaflow</h2>
@@ -340,10 +421,13 @@ function ChatPanel() {
       {/* Central Panel */}
       <div
         className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out
-           ${isRightSidebarOpen ? 'w-1/2' : 'w-3/4'
-          }`}
+           ${isRightSidebarOpen ? 'w-1/2' : 'w-3/4'}`}
       >
-        <div className={`p-4 flex justify-between items-center top-0 left-0 w-full z-10 ${innerWidth < 768 ? "sticky top-[0] shadow-md" : "hidden"}`}>
+        <div
+          className={`p-4 flex justify-between items-center top-0 left-0 w-full z-10 ${
+            innerWidth < 768 ? 'sticky top-[0] shadow-md' : 'hidden'
+          }`}
+        >
           <h2 className="text-lg font-semibold">Nexaflow</h2>
           <div className="gap-2 flex">
             <Button
@@ -369,14 +453,20 @@ function ChatPanel() {
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${message.type === 'human' ? 'justify-end' : 'justify-start'
-                }`}
+              className={`flex ${
+                message.type === 'human' ? 'justify-end' : 'justify-start'
+              }`}
             >
               <div
-                className={`${(innerWidth < 768 || isRightSidebarOpen) ? "max-w-[90%]" : "max-w-[70%]"} p-4 overflow-hidden rounded-lg ${message.type === 'human'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted flex flex-col gap-4'
-                  } break-words`}
+                className={`${
+                  innerWidth < 768 || isRightSidebarOpen
+                    ? 'max-w-[90%]'
+                    : 'max-w-[70%]'
+                } p-4 overflow-hidden rounded-lg ${
+                  message.type === 'human'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted flex flex-col gap-4'
+                } break-words`}
               >
                 <div className="prose prose-sm max-w-none overflow-x-auto">
                   {message.type === 'human' ? (
@@ -466,10 +556,36 @@ function ChatPanel() {
           <div ref={messagesEndRef} />
         </div>
         <div className="border-t p-4">
-          <div className="flex items-end space-x-2">
-            <Button variant={"ghost"} className='h-full'>
-              <PlusIcon />
-            </Button>
+          <div className="flex items-end space-x-2 items-center">
+            <button
+              onClick={
+                fileSelected && isHovered
+                  ? handleRemoveFile
+                  : handleFileInputClick
+              }
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              className="p-2 border rounded-full hover:bg-gray-700"
+              aria-label="Upload document"
+            >
+              {fileuploadstatus ? (
+                <Loader2 size={24} className="animate-spin" />
+              ) : fileSelected ? (
+                isHovered ? (
+                  <XIcon size={24} />
+                ) : (
+                  <CheckIcon size={24} />
+                )
+              ) : (
+                <UploadIcon size={24} />
+              )}
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileChange}
+            />{' '}
             <Textarea
               ref={textareaRef}
               className="resize-none min-h-[40px] max-h-[400px]"
@@ -485,7 +601,8 @@ function ChatPanel() {
             >
               {llmResponseLoading ? (
                 <Loader2
-                  className={`transition-transform duration-300 animate-spin`} />
+                  className={`transition-transform duration-300 animate-spin`}
+                />
               ) : (
                 <ArrowRight className="h-4 w-4" />
               )}
@@ -494,10 +611,14 @@ function ChatPanel() {
         </div>
       </div>
 
-      <Card className={`top-0 right-0 h-full transition-all duration-500 ease-in-out border-l
-          ${isRightSidebarOpen ? " w-1/4 translate-x-0" : "w-0 translate-x-full"} overflow-hidden
-            ${window.innerWidth < 768 ? "fixed w-[100%] z-50" : "relative"}
-          `}>
+      <Card
+        className={`top-0 right-0 h-full transition-all duration-500 ease-in-out border-l
+          ${
+            isRightSidebarOpen ? ' w-1/4 translate-x-0' : 'w-0 translate-x-full'
+          } overflow-hidden
+            ${window.innerWidth < 768 ? 'fixed w-[100%] z-50' : 'relative'}
+          `}
+      >
         <div className="p-4 flex justify-between items-center">
           <h2 className="text-xl font-bold">Action Calls</h2>
           <Button variant="ghost" size="icon" onClick={toggleRightSidebar}>
