@@ -14,22 +14,29 @@ def can_perform(query: str, agent_name: str):
     return results
 
 @execution_time
-def check_approval(query: str, doc: Document):
+def check_approval(query: str, doc: Document, old_messages: str):
     llm = ChatCohere()
+
 
     promptAction1 = ChatPromptTemplate.from_template(
         f'''
+        Old Message Context:
+        {{old_messages}}
+
+        -----------------------------------------------------------
         Description: {doc.page_content}
         
-        If the query matches the description, respond with a valid JSON containing just one key: "status" with the value "Approved" and not any other data or key.
-        If the query does not match the description, respond with a valid JSON containing two keys: "status" with the value "Disapproved" and "message" with a short reason for disapproval.
-        {{query}}
+        Query: {{query}}
+        -----------------------------------------------------------
+        
+        If the Old Message context and query matches the description, respond with a valid JSON containing just one key: "status" with the value "Approved" and not any other data or key.
+        If the Old Message context and query does not match the description, respond with a valid JSON containing two keys: "status" with the value "Disapproved" and "message" with a short reason for disapproval.
         '''
     )
 
     chain  = promptAction1 | llm | SimpleJsonOutputParser()
 
-    result = chain.invoke({ "query": query })
+    result = chain.invoke({ "query": query, "old_messages": old_messages })
 
     return result
 
