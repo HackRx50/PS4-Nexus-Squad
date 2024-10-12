@@ -1,7 +1,9 @@
 from .embeddings import get_action_vector_store, get_vector_store
+from langchain_core.messages import AIMessage, ToolMessage, HumanMessage, SystemMessage
 from .utils import execution_time
 
 from langchain_cohere import ChatCohere
+from langchain_mistralai import ChatMistralAI
 
 from langchain_community.docstore.document import Document
 from langchain_core.prompts import ChatPromptTemplate
@@ -14,29 +16,55 @@ def can_perform(query: str, agent_name: str):
     return results
 
 @execution_time
-def check_approval(query: str, doc: Document, old_messages: str):
+def check_approval(query: str, doc: Document, old_messages: str, agent_name: str):
     llm = ChatCohere()
 
+    previous_messages = ""
 
+    for message in old_messages:
+        if isinstance(message, HumanMessage):
+            previous_messages += "User: \"" + message.content + "\" \n" 
+        elif isinstance(message, AIMessage):   
+            previous_messages += "AI: \"" + message.content + "\" \n"
+        elif isinstance(message, ToolMessage):   
+            previous_messages += ""
+        elif isinstance(message, SystemMessage):   
+            previous_messages += ""
+        elif message['type'] == "human":
+            previous_messages += "User: \"" + message["content"] + "\" \n"    
+        elif message["type"] == "ai":
+            previous_messages += "AI: \"" + message["content"] + "\" \n"
+
+    print("Previous Messsages:", previous_messages)
+
+    # extactDetailPrompt = ChatPromptTemplate.from_template(
+    #     """"
+    #     respond with a valid JSON containing "details_found" containing the details available if arguments are available
+    #     """
+    # )
+    
     promptAction1 = ChatPromptTemplate.from_template(
         f'''
-        Old Message Context:
-        {{old_messages}}
+        Extract the argument details from the query and matches the description arguments, respond with a valid JSON containing just one key: "status" with the value "Approved" and not any other data or key.
+        
+        Else respond with a valid JSON containing two keys: "status" with the value "Disapproved" and "message" containing details of arguments which was not provided or description mismatch if that is the reason. and also return the "user_query": given by the user. 
 
-        -----------------------------------------------------------
+        -----------------------------------------------------------------------------
         Description: {doc.page_content}
+        ------------------------------------------------------------------------------
         
-        Query: {{query}}
-        -----------------------------------------------------------
+        Query: 
+        {{old_messages}}
+        {{query}}
         
-        If the Old Message context and query matches the description, respond with a valid JSON containing just one key: "status" with the value "Approved" and not any other data or key.
-        If the Old Message context and query does not match the description, respond with a valid JSON containing two keys: "status" with the value "Disapproved" and "message" with a short reason for disapproval.
+        ------------------------------------------------------------------------------
+
         '''
     )
 
     chain  = promptAction1 | llm | SimpleJsonOutputParser()
 
-    result = chain.invoke({ "query": query, "old_messages": old_messages })
+    result = chain.invoke({ "query": query, "old_messages": previous_messages })
 
     return result
 

@@ -184,14 +184,14 @@ class SessionManager:
                         if 'agent' in chunk:
                             for message in chunk['agent']['messages']:
                                 messages.append(message)
-                                yield message.json()
+                                yield json.dumps({ "type": "ai", "content": message.content, "success": True })
                         if 'tools' in chunk:
                             for message in chunk['tools']['messages']:
                                 messages.append(message)
                                 yield message.json()
                 except Exception as e:
                     print(f"An error occurred: {e}")
-                    yield json.dumps({ "type": "ai", "content": "An error occured while processing the response.", "success": False })
+                    yield json.dumps({ "type": "ai", "content": f"An error occured {e}", "success": False })
                 finally:
                     callback()
                     
