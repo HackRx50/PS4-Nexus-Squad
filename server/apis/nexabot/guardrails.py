@@ -45,8 +45,10 @@ def remove_quotes_and_braces(input_string):
 
 @execution_time
 def can_answer_from_docs(query: str, agent_name: str):
+    print(agent_name)
+
     vc_store = get_vector_store(agent_name)
-    search_result = vc_store.similarity_search_with_relevance_scores(query)
+    search_result = vc_store.similarity_search_with_relevance_scores(query, k=8)
 
     pages = ""
 
@@ -59,6 +61,7 @@ def can_answer_from_docs(query: str, agent_name: str):
             -----------------------------------------------------------------------------     
         """
 
+    print(pages)
     llm = ChatCohere()
 
     promptAction1 = ChatPromptTemplate.from_template(

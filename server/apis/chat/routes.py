@@ -106,6 +106,9 @@ def getChatSessions(request: Request):
             return HTTPException(status_code=404, detail="Something Went wrong")
 
 
+async def answer_from_docs(session_id: str):
+    pass
+
 @chat_router.post("/{session_id}")
 async def talk_session(session_id: str, request: Request):
     try:
@@ -118,12 +121,19 @@ async def talk_session(session_id: str, request: Request):
             UserAPIKey.increase_use_count(user_id, userKey)
 
         session, nexabot = session_manager.handle_session(session_id, agent_name, user_id=user_id)
-
+        
         data = await request.json()
         user_query = data.get('query')
 
+        # if session.documents and len(session.documents) > 0:
+        #     print("Document exists")
+        #     await answer_from_docs(session_id)
+        #     return
+
+
         if not user_query:
             raise HTTPException(status_code=400, detail={"detail": "Query is required"})
+                
 
         can_perform_result = can_perform(user_query, agent_name)
         if can_perform_result:
@@ -138,6 +148,7 @@ async def talk_session(session_id: str, request: Request):
 
             elif approval_result['status'] == "Disapproved":
 
+                # Search Approval
                 doc_approval = can_answer_from_docs(user_query, agent_name)
                 if doc_approval["status"] == "Approved":
                     process_stream = session_manager.talk(session, nexabot, user_query)
@@ -150,7 +161,7 @@ async def talk_session(session_id: str, request: Request):
 
                 return ai_message
         
-        ai_message = {"type": "ai", "content": "Something went wrong", "success": False}
+        ai_message = {"type": "ai", "content": "You have no actions available", "success": False}
         session_manager.sessions_messages[session.cid].append(ai_message)
         return ai_message
     
@@ -175,9 +186,15 @@ async def session_document_upload(session_id: str, request: Request, file: Uploa
                 ids = save_session_document_embeddings(file_path, session_id)
                 document = KnowledgeDocument.create(name=file.filename, type=file.content_type, agent_id=agent.agid, ids=ids)
                 print(document.name)
-                session, _ = session_manager.handle_session(session_id, agent.name, user_id=user_id)
-                session.documents = session.documents
-                return {"message": "Document Uploaded Successfully", "data": document}
+                chat_session, _ = session_manager.handle_session(session_id, agent.name, user_id=user_id)
+                chat_session = session.query(ChatSession).filter(ChatSession.cid==session_id).first()
+                if chat_session.documents:
+                    chat_session.documents = chat_session.documents  + [document.did]
+                else:
+                    chat_session.documents = [document.did]
+                session.commit()
+                session_manager.reload_chat_session(session_id, agent.name, user_id=user_id)
+                return {"message": "Document Uploaded Successfully", "data": chat_session.documents}
             else:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agent not found")
     except HTTPException as he:
@@ -188,6 +205,16 @@ async def session_document_upload(session_id: str, request: Request, file: Uploa
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
 
+@chat_router.get("/{session_id}/document")
+async def get_chat_session_document(session_id: str, request: Request):
+    try: 
+        subdomain = request.state.subdomain
+        with Session(engine) as session:
+            chat_session = session.query(ChatSession).filter(ChatSession.cid==session_id).first()
+            return chat_session.documents
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=status.HTTP_510_NOT_EXTENDED, detail={ "details": "Counldn't Fetch uploaded document details"})
 
 @chat_router.delete("/{session_id}")
 async def delete_session(session_id: str, request: Request):
