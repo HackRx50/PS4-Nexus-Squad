@@ -22,6 +22,7 @@ import { appFetch, BASE_URL } from '../utilities';
 import { createId } from '@paralleldrive/cuid2';
 import {
   addSession,
+  setSessionDocuments,
   setSessionMessage,
   setSessionMessages,
   setSessionTitle,
@@ -61,13 +62,17 @@ function ChatPanel() {
         },
       });
       if (response.ok) {
-        const sessionData: { messages: Message[] } = await response.json();
+        const sessionData: { messages: Message[], documents: string[] } = await response.json();
         dispatch(
           setSessionMessages({
             sessionId: session_id,
             messages: sessionData['messages'],
           })
         );
+        dispatch(setSessionDocuments({
+          sessionId: session_id,
+          documents: sessionData['documents'],
+        }));
       } else {
         if (response.status === 401) {
           const errorData = await response.json();
@@ -173,17 +178,25 @@ function ChatPanel() {
     try {
       setfileuploadstatus(true);
       const formData = new FormData();
-      formData.append('document', file);
+      formData.append('file', file);
 
       const response = await appFetch(`/api/v1/chat/${session_id}/document`, {
         method: 'POST',
         body: formData,
-        accessToken: accessToken
+        accessToken: accessToken!
       });
 
       if (response.ok) {
+        const { data, message }: {data: string[], message: string} = await response.json();
         console.log('Document uploaded successfully');
-        alert('Document uploaded successfully');
+        dispatch(setSessionDocuments({
+          sessionId: session_id!,
+          documents: data
+        }));
+        toast({
+          description: message,
+          duration: 3000
+        });
         setFileSelected(null);
       } else {
         const data = await response.json();
@@ -556,7 +569,7 @@ function ChatPanel() {
           <div ref={messagesEndRef} />
         </div>
         <div className="border-t p-4">
-          <div className="flex items-end space-x-2 items-center">
+          <div className="flex space-x-2 items-center">
             <button
               onClick={
                 fileSelected && isHovered
