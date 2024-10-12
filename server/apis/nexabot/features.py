@@ -32,7 +32,7 @@ def get_vector_tool(agent_name: str):
         Search the database for the given query
         """
         vector_store = get_vector_store(agent_name)
-        return vector_store.similarity_search(query)
+        return vector_store.similarity_search(query, k=8)
     return search_vector_store
 
 
@@ -261,6 +261,26 @@ class SessionManager:
         nexabot = self.get_nexabot(session)
         self.load_session_messages(session)
         return session, nexabot
+
+    def reload_chat_session(self, session_id:str, agent_name: str, user_id: str = None):
+        with Session(engine) as db_session:
+            session = ChatSession.get_session_by_id(db_session, session_id, user_id)
+            for index, value in enumerate(self.chat_sessions):
+                if value.cid == session_id:
+                    del self.chat_sessions[index]
+                    break
+            if session:
+                self.chat_sessions.append(session)
+                return session
+            else:
+                agent = find_agent_by_name(db_session, agent_name)
+                if not agent:
+                    raise ValueError("Agent Not Found")
+                session = ChatSession.create(
+                    agent=agent.agid, cid=session_id, user_id=user_id
+                )
+                self.chat_sessions.append(session)
+                return session
 
 
 def parse_id(id_string):

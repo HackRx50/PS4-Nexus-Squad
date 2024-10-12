@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1a2b3c4d",
+    "mobile": "+1234567890",
+    "productId": "prod-001",
+    "productName": "Wireless Earbuds",
+    "productPrice": 49.99,
+    "action": "cancel"
+  },
+  {
+    "id": "5e6f7g8h",
+    "mobile": "+0987654321",
+    "productId": "prod-002",
+    "productName": "Smartphone Case",
+    "productPrice": 19.99,
+    "action": "cancel"
+  },
+  {
+    "id": "9i0j1k2l",
+    "mobile": "+1122334455",
+    "productId": "prod-003",
+    "productName": "Bluetooth Speaker",
+    "productPrice": 79.99,
+    "action": "cancel"
+  },
+  {
+    "id": "3m4n5o6p",
+    "mobile": "+6677889900",
+    "productId": "prod-004",
+    "productName": "Laptop Stand",
+    "productPrice": 29.99,
+    "action": "cancel"
+  },
+  {
+    "id": "7q8r9s0t",
+    "mobile": "+5544332211",
+    "productId": "prod-005",
+    "productName": "Wireless Mouse",
+    "productPrice": 39.99,
+    "action": "cancel"
+  }
+]
