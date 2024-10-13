@@ -177,7 +177,7 @@ class SessionManager:
 
         if ENVIRONMENT == "production":
             result = nexabot.stream(session_messages)
-            def process_stream(stream, messages, callback):
+            def process_stream(stream, messages, callback, original_message: str):
                 try:
                     resp = adjust_prompt_after_error(session_messages)
                     print("Adjusted Resp:", resp)
@@ -188,6 +188,8 @@ class SessionManager:
                         session_messages.pop()
                         session_messages.append(HumanMessage(content=prompt))
                         result = nexabot.stream(session_messages)
+                        session_messages.pop()
+                        session_messages.append(HumanMessage(content=original_message))
                     for chunk in stream:
                         print(chunk)
                         if 'agent' in chunk:
@@ -209,6 +211,8 @@ class SessionManager:
                             session_messages.pop()
                             session_messages.append(HumanMessage(content=prompt))
                             result = nexabot.stream(session_messages)
+                            session_messages.pop()
+                            session_messages.append(HumanMessage(content=original_message))
                             for chunk in result:
                                 if 'agent' in chunk:
                                     for message in chunk['agent']['messages']:
@@ -223,7 +227,7 @@ class SessionManager:
                 finally:
                     callback()
                     
-            return process_stream(result, session_messages, save_session(session.cid))
+            return process_stream(result, session_messages, save_session(session.cid), original_message=message)
         else:
             from apis.sample import sampleInvoke
             session_messages.pop()

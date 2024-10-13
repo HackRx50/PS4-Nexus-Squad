@@ -44,19 +44,33 @@ def check_approval(query: str, doc: Document, old_messages: str, agent_name: str
     # )
     
     promptAction1 = ChatPromptTemplate.from_template(
-        f'''
-        Description: {doc.page_content}
-        
-        If the query matches the description, respond with a valid JSON containing just one key: "status" with the value "Approved" and not any other data or key.
-        If the query does not match the description, respond with a valid JSON containing two keys: "status" with the value "Disapproved" and "message" with a short reason for disapproval.
-        
-        {{query}}
-        '''
-    )
+        """
+        Description: {page_content}
 
+        Evaluate the following query against the above description:
+        {query}
+
+        Response instructions:
+        1. If the query matches the description perfectly (including all arguments):
+        Return a JSON with only one key:
+        {{"status": "Approved"}}
+
+        2. If the query matches the description but is missing some argument details:
+        Return a JSON with two keys:
+        {{"status": "Disapproved",
+            "message": "Please provide [list the missing argument details]"}}
+
+        3. If the query does not match the description at all:
+        Return a JSON with two keys:
+        {{"status": "Disapproved",
+            "message": "No relevant details found for this query"}}
+
+        Ensure your response is a valid JSON object with the appropriate keys as described above.
+        """
+    )
     chain  = promptAction1 | llm | SimpleJsonOutputParser()
 
-    result = chain.invoke({ "query": query, "old_messages": previous_messages })
+    result = chain.invoke({ "query": query, "old_messages": previous_messages, "page_content": doc.page_content })
 
     return result
 
@@ -106,7 +120,7 @@ def can_answer_from_docs(query: str, agent_name: str):
 
     chain  = promptAction1 | llm | SimpleJsonOutputParser()
 
-    result = chain.invoke({ "query": query })
+    # result = chain.invoke({ "query": query })
     result = {}
 
     for docs in search_result:
@@ -121,23 +135,6 @@ def can_answer_from_docs(query: str, agent_name: str):
 
 
 def adjust_prompt_after_error(messages):
-    # from langchain_openai import AzureChatOpenAI
-    # import os
-    # az_openai_endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
-    # az_openai_key = os.environ.get("AZURE_OPENAI_API_KEY")
-    # az_openai_version = os.environ.get("OPENAI_API_VERSION")
-
-    # print(az_openai_endpoint, az_openai_key, az_openai_version)
-
-
-    # az_openai = AzureChatOpenAI(
-    #     deployment_name="gpt-35-turbo",
-    #     api_key=az_openai_key,
-    #     azure_endpoint=az_openai_endpoint,
-    #     api_version=az_openai_version,
-    #     model="gpt-35-turbo"
-    # )
-
     cohere = ChatCohere(model="command-r-plus")
     
     promptAction1 = ChatPromptTemplate.from_template(
@@ -145,7 +142,8 @@ def adjust_prompt_after_error(messages):
         Context:
         {messages}
 
-        Based on the context above, generate a new user query as if it were asked by the user. The query should be related to the information from the most recent messages.
+        Based on the context above, generate a new user query as if it were asked by the user. The query should be related to the information from the most recent messages. 
+        If possible try to use the same wordings use in the messages for things, users and places and other nouns.
 
         Return your response as a JSON object with a single key "prompt" containing the generated query.
 
