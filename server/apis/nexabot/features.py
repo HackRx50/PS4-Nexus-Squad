@@ -23,6 +23,8 @@ from storage.utils import (
 from .embeddings import get_vector_store
 from settings import SYSTEM_MESSAGE_CONTENT
 
+from .guardrails import adjust_prompt_after_error
+
 
 
 def get_vector_tool(agent_name: str):
@@ -32,7 +34,7 @@ def get_vector_tool(agent_name: str):
         Search the database for the given query
         """
         vector_store = get_vector_store(agent_name)
-        return vector_store.similarity_search(query, k=8)
+        return vector_store.similarity_search(query, k=4)
     return search_vector_store
 
 
@@ -42,7 +44,6 @@ class NexaBot:
     agent_name: str
     chatBot: CompiledGraph = None
     llm = None
-
     def boot(self, db_session: Session) -> bool:
         try:
             print("Booting agent...")
@@ -178,20 +179,47 @@ class SessionManager:
             result = nexabot.stream(session_messages)
             def process_stream(stream, messages, callback):
                 try:
-                    for chunk in stream:
+                    resp = adjust_prompt_after_error(session_messages)
+                    print("Adjusted Resp:", resp)
+                    prompt = resp['prompt']
+                    print("Adjusted Prompt: ", prompt)
 
+                    if prompt:
+                        session_messages.pop()
+                        session_messages.append(HumanMessage(content=prompt))
+                        result = nexabot.stream(session_messages)
+                    for chunk in stream:
                         print(chunk)
                         if 'agent' in chunk:
                             for message in chunk['agent']['messages']:
                                 messages.append(message)
-                                yield message.json()
+                                yield json.dumps({ "type": "ai", "content": message.content, "success": True })
                         if 'tools' in chunk:
                             for message in chunk['tools']['messages']:
                                 messages.append(message)
                                 yield message.json()
                 except Exception as e:
-                    print(f"An error occurred: {e}")
-                    yield json.dumps({ "type": "ai", "content": "An error occured while processing the response.", "success": False })
+                    print(f"An error occurred: {e}") 
+                    try:
+                        resp = adjust_prompt_after_error(session_messages)
+                        print("Adjusted Resp After Error: ", prompt)
+                        prompt = resp['prompt']
+                        print("Adjusted Prompt After Error: ", prompt)
+                        if prompt:
+                            session_messages.pop()
+                            session_messages.append(HumanMessage(content=prompt))
+                            result = nexabot.stream(session_messages)
+                            for chunk in result:
+                                if 'agent' in chunk:
+                                    for message in chunk['agent']['messages']:
+                                        messages.append(message)
+                                        yield json.dumps({ "type": "ai", "content": message.content, "success": True })
+                                if 'tools' in chunk:
+                                    for message in chunk['tools']['messages']:
+                                        messages.append(message)
+                                        yield message.json()
+                    except Exception as e:
+                        yield json.dumps({ "type": "ai", "content": f"An error occured {e}", "success": False })
                 finally:
                     callback()
                     

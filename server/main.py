@@ -5,6 +5,9 @@ from dotenv import load_dotenv, find_dotenv
 from os.path import join
 import sys
 import cuid
+import pydantic
+
+pydantic.SkipValidation = True
 
 from apis.nexabot.features import SessionManager
 
@@ -41,4 +44,4 @@ if __name__=="__main__":
     else:
         from uvicorn import run
         # run("main:app", host="0.0.0.0", port=443, ssl_certfile="./certs/certificate.pem", ssl_keyfile="./certs/private-key.pem")
-        run("main:app", host="0.0.0.0", port=8000, reload=True)
+        run("main:app", host="0.0.0.0", port=8001, reload=True)
