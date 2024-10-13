@@ -266,7 +266,7 @@ function ChatPanel() {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            const decodedValue = decoder.decode(value);
+            const decodedValue = decoder.decode(value).trim();
             dispatch(
               setSessionMessage({
                 sessionId: session_id,
@@ -326,6 +326,7 @@ function ChatPanel() {
           const { done, value } = await reader.read();
           if (done) break;
           const decodedValue = decoder.decode(value);
+          console.log(decodedValue)
           responseData += decodedValue;
           dispatch(
             setSessionTitle({ sessionId: sessionID, title: responseData })
@@ -570,7 +571,7 @@ function ChatPanel() {
         </div>
         <div className="border-t p-4">
           <div className="flex space-x-2 items-center">
-            <button
+            {/* <button
               onClick={
                 fileSelected && isHovered
                   ? handleRemoveFile
@@ -598,7 +599,7 @@ function ChatPanel() {
               ref={fileInputRef}
               className="hidden"
               onChange={handleFileChange}
-            />{' '}
+            /> */}
             <Textarea
               ref={textareaRef}
               className="resize-none min-h-[40px] max-h-[400px]"
