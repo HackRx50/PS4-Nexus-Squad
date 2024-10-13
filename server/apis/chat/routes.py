@@ -18,6 +18,8 @@ from storage.models import ChatSession, User, UserAPIKey, KnowledgeDocument
 from storage.db import Session, engine
 from storage.utils import find_agent_by_name
 
+from apis.nexabot.guardrails import adjust_prompt_after_error
+from langchain_core.messages import HumanMessage
 
 chat_router = APIRouter(prefix="/chat")
 
@@ -133,23 +135,20 @@ async def talk_session(session_id: str, request: Request):
 
         if not user_query:
             raise HTTPException(status_code=400, detail={"detail": "Query is required"}) 
-    
-        # doc_approval = can_answer_from_docs(user_query, agent_name)
-        # if doc_approval["status"] == "Approved":
-        #     print("User Query: ", user_query, "Documents::Approved")
-        #     process_stream = session_manager.talk(session, nexabot, user_query)
-        #     User.decrease_available_limit(user_id)
-        #     return StreamingResponse(process_stream, media_type="text/plain")   
-        process_stream = session_manager.talk(session, nexabot, user_query)
-        User.decrease_available_limit(user_id)
-        return StreamingResponse(process_stream, media_type="text/plain")
+       
+        # process_stream = session_manager.talk(session, nexabot, user_query)
+        # User.decrease_available_limit(user_id)
+        # return StreamingResponse(process_stream, media_type="text/plain")
     
 
-        can_perform_result = can_perform(user_query, agent_name)
+        session_data = session_manager.get_chat_session(session_id, agent_name, user_id)
+
+        prompt = adjust_prompt_after_error(session_data.messages[-5:] + [HumanMessage(content=user_query)])
+
+        can_perform_result = can_perform(prompt["prompt"], agent_name)
         if can_perform_result:
-            session_data = session_manager.get_chat_session(session_id, agent_name, user_id)
 
-            approval_result = check_approval(user_query, can_perform_result[0], session_data.messages, agent_name)
+            approval_result = check_approval(prompt["prompt"], can_perform_result[0], session_data.messages, agent_name)
 
             # Action Approval
             if approval_result['status'] == 'Approved':
@@ -160,10 +159,20 @@ async def talk_session(session_id: str, request: Request):
                 return StreamingResponse(process_stream, media_type="text/plain")
 
             elif approval_result['status'] == "Disapproved":
+                print("User Query: ", user_query, "Action::Disapproved")
 
                 # Search Approval
                 
-                
+                doc_approval = can_answer_from_docs(prompt["prompt"], agent_name)
+                print("Docs approval: ", doc_approval)
+                if doc_approval["status"] == "Approved":
+                    print("User Query: ", prompt, "Documents::Approved")
+                    process_stream = session_manager.talk(session, nexabot, user_query)
+                    User.decrease_available_limit(user_id)
+                    return StreamingResponse(process_stream, media_type="text/plain")
+                else:
+                    print("User Query: ", prompt, "Documents::Disapproved")
+
                 session_manager.sessions_messages[session.cid].append({ "type": "human", "content": user_query })
                 ai_message = {"type": "ai", "content": approval_result["message"], "success": False}
                 session_manager.sessions_messages[session.cid].append(ai_message)
